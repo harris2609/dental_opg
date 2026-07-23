@@ -5,6 +5,13 @@ app_description = "Standalone Frappe app for dental OPG X-ray structured reporti
 app_email = "tools.zenpivot@gmail.com"
 app_license = "mit"
 
+fixtures = ["OPG Standard Finding", "OPG Tooth Finding", "Print Format"]
+
+website_route_rules = [
+	{"from_route": "/dental_opg/<path:app_path>", "to_route": "dental_opg"},
+	{"from_route": "/dental_opg", "to_route": "dental_opg"},
+]
+
 # Apps
 # ------------------
 
@@ -76,11 +83,9 @@ app_license = "mit"
 # Jinja
 # ----------
 
-# add methods and filters to jinja environment
-# jinja = {
-# 	"methods": "dental_opg.utils.jinja_methods",
-# 	"filters": "dental_opg.utils.jinja_filters"
-# }
+jinja = {
+	"methods": ["dental_opg.dental_opg_reporting.report_builder.build_report_sections"],
+}
 
 # Installation
 # ------------
@@ -183,9 +188,9 @@ app_license = "mit"
 # Overriding Methods
 # ------------------------------
 #
-# override_whitelisted_methods = {
-# 	"frappe.desk.doctype.event.event.get_events": "dental_opg.event.get_events"
-# }
+override_whitelisted_methods = {
+	"frappe.utils.print_format.download_pdf": "dental_opg.print_utils.download_pdf",
+}
 #
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,

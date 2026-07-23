@@ -1,0 +1,43 @@
+{
+    "name": "OPG Tooth Finding",
+    "module": "Dental OPG Reporting",
+    "doctype": "DocType",
+    "engine": "InnoDB",
+    "autoname": "hash",
+    "naming_rule": "Random",
+    "is_submittable": 0,
+    "sort_field": "modified",
+    "sort_order": "DESC",
+    "fields": [
+        {
+            "fieldname": "finding_name",
+            "fieldtype": "Data",
+            "label": "Finding Name",
+            "reqd": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "finding_template",
+            "fieldtype": "Small Text",
+            "label": "Finding Template",
+            "description": "Use {tooth_number} as placeholder, e.g. 'Tooth {tooth_number}: caries noted'",
+            "reqd": 1
+        },
+        {
+            "fieldname": "active",
+            "fieldtype": "Check",
+            "label": "Active",
+            "default": "1",
+            "in_list_view": 1
+        }
+    ],
+    "permissions": [
+        {
+            "role": "System Manager",
+            "read": 1,
+            "write": 1,
+            "create": 1,
+            "delete": 1
+        }
+    ]
+}

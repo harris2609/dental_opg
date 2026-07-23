@@ -1,0 +1,267 @@
+<template>
+	<div class="flex h-full flex-col">
+		<div class="flex flex-wrap items-center gap-1 border-b bg-white p-1.5 text-xs">
+			<button class="toolbtn" @click="zoomOut">-</button>
+			<span class="w-12 text-center text-gray-600">{{ Math.round(zoom * 100) }}%</span>
+			<button class="toolbtn" @click="zoomIn">+</button>
+			<button class="toolbtn" @click="fitToScreen">Fit</button>
+			<span class="mx-1 h-4 border-l"></span>
+			<button
+				v-for="t in tools"
+				:key="t.value"
+				class="toolbtn"
+				:class="mode === t.value ? 'bg-gray-900 text-white' : ''"
+				@click="mode = t.value"
+			>
+				{{ t.label }}
+			</button>
+			<button class="toolbtn ml-auto text-red-600" @click="clearAnnotations">Clear annotations</button>
+		</div>
+
+		<div
+			ref="viewport"
+			class="relative flex-1 select-none overflow-hidden bg-gray-100"
+			:class="mode === 'pan' ? 'cursor-grab' : 'cursor-crosshair'"
+			@mousedown="onMouseDown"
+			@mousemove="onMouseMove"
+			@mouseup="onMouseUp"
+			@mouseleave="onMouseUp"
+			@wheel.prevent="onWheel"
+		>
+			<div v-if="!imageUrl" class="flex h-full items-center justify-center text-sm text-gray-400">
+				No OPG image uploaded yet
+			</div>
+			<div class="absolute left-0 top-0 origin-top-left" :style="transformStyle">
+				<img
+					v-if="imageUrl"
+					ref="imgEl"
+					:src="imageUrl"
+					class="pointer-events-none max-w-none"
+					@load="onImageLoad"
+				/>
+				<svg
+					v-if="imgSize.w"
+					:width="imgSize.w"
+					:height="imgSize.h"
+					viewBox="0 0 1 1"
+					preserveAspectRatio="none"
+					class="absolute left-0 top-0"
+				>
+					<defs>
+						<marker id="arrowhead" markerWidth="4" markerHeight="4" refX="3" refY="2" orient="auto">
+							<path d="M0,0 L4,2 L0,4 Z" fill="#ff0000" />
+						</marker>
+					</defs>
+					<template v-for="(a, i) in annotations" :key="i">
+						<circle v-if="a.annotation_type === 'Point'" :cx="a.x" :cy="a.y" r="0.007" fill="#ff0000" />
+						<line
+							v-else-if="a.annotation_type === 'Arrow'"
+							:x1="a.x"
+							:y1="a.y"
+							:x2="a.x2"
+							:y2="a.y2"
+							stroke="#ff0000"
+							stroke-width="0.003"
+							marker-end="url(#arrowhead)"
+						/>
+						<polyline
+							v-else-if="a.annotation_type === 'Freehand'"
+							:points="pathPoints(a)"
+							fill="none"
+							stroke="#ff0000"
+							stroke-width="0.003"
+						/>
+						<text v-else-if="a.annotation_type === 'Text'" :x="a.x" :y="a.y" font-size="0.028" fill="#ff0000">
+							{{ a.label_text }}
+						</text>
+					</template>
+					<polyline
+						v-if="drawingPath.length"
+						:points="drawingPath.map((p) => `${p.x},${p.y}`).join(' ')"
+						fill="none"
+						stroke="#ff0000"
+						stroke-width="0.003"
+					/>
+				</svg>
+			</div>
+		</div>
+
+		<div v-if="pendingText" class="flex gap-2 border-t bg-white p-2">
+			<input
+				ref="textInput"
+				v-model="pendingText.label_text"
+				placeholder="Annotation label, press Enter to place"
+				class="flex-1 rounded border px-2 py-1 text-sm"
+				@keyup.enter="commitText"
+				@keyup.esc="pendingText = null"
+			/>
+			<button class="toolbtn" @click="commitText">Add</button>
+		</div>
+
+		<div class="border-t p-2">
+			<label class="toolbtn inline-block cursor-pointer">
+				{{ imageUrl ? 'Replace OPG Image' : 'Upload OPG Image' }}
+				<input type="file" accept="image/png,image/jpeg" class="hidden" @change="onFileChange" />
+			</label>
+		</div>
+	</div>
+</template>
+
+<script setup>
+import { ref, reactive, computed, nextTick } from 'vue'
+
+const props = defineProps({
+	imageUrl: { type: String, default: '' },
+	annotations: { type: Array, default: () => [] },
+})
+const emit = defineEmits(['update:annotations', 'upload'])
+
+const tools = [
+	{ value: 'pan', label: 'Pan' },
+	{ value: 'Point', label: 'Point' },
+	{ value: 'Arrow', label: 'Arrow' },
+	{ value: 'Text', label: 'Text' },
+	{ value: 'Freehand', label: 'Freehand' },
+]
+const mode = ref('pan')
+
+const viewport = ref(null)
+const imgEl = ref(null)
+const textInput = ref(null)
+const imgSize = reactive({ w: 0, h: 0 })
+const zoom = ref(1)
+const panX = ref(0)
+const panY = ref(0)
+
+const transformStyle = computed(() => ({
+	transform: `translate(${panX.value}px, ${panY.value}px) scale(${zoom.value})`,
+	width: imgSize.w + 'px',
+	height: imgSize.h + 'px',
+}))
+
+function onImageLoad() {
+	imgSize.w = imgEl.value.naturalWidth
+	imgSize.h = imgEl.value.naturalHeight
+	fitToScreen()
+}
+
+function fitToScreen() {
+	if (!imgSize.w || !viewport.value) return
+	const vw = viewport.value.clientWidth
+	const vh = viewport.value.clientHeight
+	zoom.value = Math.min(vw / imgSize.w, vh / imgSize.h, 1) * 0.98
+	panX.value = Math.max(0, (vw - imgSize.w * zoom.value) / 2)
+	panY.value = Math.max(0, (vh - imgSize.h * zoom.value) / 2)
+}
+
+function zoomIn() {
+	zoom.value = Math.min(zoom.value * 1.25, 8)
+}
+function zoomOut() {
+	zoom.value = Math.max(zoom.value / 1.25, 0.1)
+}
+function onWheel(e) {
+	if (e.deltaY < 0) zoomIn()
+	else zoomOut()
+}
+
+function getNormalizedPoint(e) {
+	const rect = viewport.value.getBoundingClientRect()
+	const mx = e.clientX - rect.left
+	const my = e.clientY - rect.top
+	const cx = (mx - panX.value) / zoom.value
+	const cy = (my - panY.value) / zoom.value
+	return {
+		x: Math.min(1, Math.max(0, cx / imgSize.w)),
+		y: Math.min(1, Math.max(0, cy / imgSize.h)),
+	}
+}
+
+function addAnnotation(annotation) {
+	emit('update:annotations', [...props.annotations, annotation])
+}
+function clearAnnotations() {
+	emit('update:annotations', [])
+}
+
+const panning = ref(false)
+const panStart = ref({ x: 0, y: 0, panX: 0, panY: 0 })
+const arrowStart = ref(null)
+const drawingPath = ref([])
+const pendingText = ref(null)
+
+function onMouseDown(e) {
+	if (!imgSize.w) return
+	if (mode.value === 'pan') {
+		panning.value = true
+		panStart.value = { x: e.clientX, y: e.clientY, panX: panX.value, panY: panY.value }
+		return
+	}
+	const point = getNormalizedPoint(e)
+	if (mode.value === 'Point') {
+		addAnnotation({ annotation_type: 'Point', x: point.x, y: point.y })
+	} else if (mode.value === 'Arrow') {
+		arrowStart.value = point
+	} else if (mode.value === 'Text') {
+		pendingText.value = { annotation_type: 'Text', x: point.x, y: point.y, label_text: '' }
+		nextTick(() => textInput.value?.focus())
+	} else if (mode.value === 'Freehand') {
+		drawingPath.value = [point]
+	}
+}
+
+function onMouseMove(e) {
+	if (panning.value) {
+		panX.value = panStart.value.panX + (e.clientX - panStart.value.x)
+		panY.value = panStart.value.panY + (e.clientY - panStart.value.y)
+		return
+	}
+	if (mode.value === 'Freehand' && drawingPath.value.length) {
+		drawingPath.value.push(getNormalizedPoint(e))
+	}
+}
+
+function onMouseUp(e) {
+	panning.value = false
+	if (mode.value === 'Arrow' && arrowStart.value) {
+		const end = getNormalizedPoint(e)
+		addAnnotation({ annotation_type: 'Arrow', x: arrowStart.value.x, y: arrowStart.value.y, x2: end.x, y2: end.y })
+		arrowStart.value = null
+	}
+	if (mode.value === 'Freehand' && drawingPath.value.length > 1) {
+		addAnnotation({ annotation_type: 'Freehand', path_data: JSON.stringify(drawingPath.value) })
+	}
+	drawingPath.value = []
+}
+
+function commitText() {
+	if (pendingText.value && pendingText.value.label_text.trim()) {
+		addAnnotation({ ...pendingText.value })
+	}
+	pendingText.value = null
+}
+
+function pathPoints(a) {
+	try {
+		return JSON.parse(a.path_data)
+			.map((p) => `${p.x},${p.y}`)
+			.join(' ')
+	} catch {
+		return ''
+	}
+}
+
+function onFileChange(e) {
+	const file = e.target.files[0]
+	if (file) emit('upload', file)
+	e.target.value = ''
+}
+
+defineExpose({ fitToScreen })
+</script>
+
+<style scoped>
+.toolbtn {
+	@apply rounded bg-gray-100 px-2 py-1 hover:bg-gray-200;
+}
+</style>

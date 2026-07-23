@@ -1,0 +1,56 @@
+{
+    "name": "OPG Annotation",
+    "module": "Dental OPG Reporting",
+    "doctype": "DocType",
+    "engine": "InnoDB",
+    "istable": 1,
+    "autoname": "hash",
+    "naming_rule": "Random",
+    "fields": [
+        {
+            "fieldname": "annotation_type",
+            "fieldtype": "Select",
+            "label": "Type",
+            "options": "Point\nArrow\nText\nFreehand",
+            "reqd": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "x",
+            "fieldtype": "Float",
+            "label": "X (normalized 0-1)"
+        },
+        {
+            "fieldname": "y",
+            "fieldtype": "Float",
+            "label": "Y (normalized 0-1)"
+        },
+        {
+            "fieldname": "x2",
+            "fieldtype": "Float",
+            "label": "X2 (arrow end, normalized 0-1)"
+        },
+        {
+            "fieldname": "y2",
+            "fieldtype": "Float",
+            "label": "Y2 (arrow end, normalized 0-1)"
+        },
+        {
+            "fieldname": "label_text",
+            "fieldtype": "Data",
+            "label": "Label Text",
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "path_data",
+            "fieldtype": "Long Text",
+            "label": "Path Data (JSON points for freehand)"
+        },
+        {
+            "fieldname": "color",
+            "fieldtype": "Data",
+            "label": "Color",
+            "default": "#ff0000"
+        }
+    ]
+}

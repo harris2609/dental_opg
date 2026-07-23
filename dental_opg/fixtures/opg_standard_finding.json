@@ -1,0 +1,198 @@
+[
+    {
+        "doctype": "OPG Standard Finding",
+        "name": "csf-no-changes",
+        "section_name": "Condylar Morphology",
+        "finding_label": "No evident radiographic changes noted",
+        "finding_template": "No evident radiographic changes noted",
+        "active": 1
+    },
+    {
+        "doctype": "OPG Standard Finding",
+        "name": "csf-normal",
+        "section_name": "Condylar Morphology",
+        "finding_label": "Condylar morphology appears to be normal",
+        "finding_template": "Condylar morphology appears to be normal",
+        "active": 1
+    },
+    {
+        "doctype": "OPG Standard Finding",
+        "name": "csf-altered",
+        "section_name": "Condylar Morphology",
+        "finding_label": "Altered condylar morphology noted",
+        "finding_template": "Altered condylar morphology noted wrt {side} side",
+        "allow_side": 1,
+        "active": 1
+    },
+    {
+        "doctype": "OPG Standard Finding",
+        "name": "csf-flattening",
+        "section_name": "Condylar Morphology",
+        "finding_label": "Flattening of the anterosuperior surface of condylar head",
+        "finding_template": "Flattening of the anterosuperior surface wrt {side} condylar head",
+        "allow_side": 1,
+        "active": 1
+    },
+    {
+        "doctype": "OPG Standard Finding",
+        "name": "sp-normal-length",
+        "section_name": "Styloid Process",
+        "finding_label": "Normal length",
+        "finding_template": "Normal length",
+        "active": 1
+    },
+    {
+        "doctype": "OPG Standard Finding",
+        "name": "sp-abnormal-length",
+        "section_name": "Styloid Process",
+        "finding_label": "Abnormal length",
+        "finding_template": "Abnormal length",
+        "active": 1
+    },
+    {
+        "doctype": "OPG Standard Finding",
+        "name": "sp-bilateral-appreciated",
+        "section_name": "Styloid Process",
+        "finding_label": "Can be appreciated bilaterally",
+        "finding_template": "Can be appreciated bilaterally",
+        "active": 1
+    },
+    {
+        "doctype": "OPG Standard Finding",
+        "name": "sp-elongated",
+        "section_name": "Styloid Process",
+        "finding_label": "Appears to be elongated",
+        "finding_template": "Appears to be elongated on the {side} side",
+        "allow_side": 1,
+        "active": 1
+    },
+    {
+        "doctype": "OPG Standard Finding",
+        "name": "sp-segmented",
+        "section_name": "Styloid Process",
+        "finding_label": "Appears to be segmented",
+        "finding_template": "Appears to be segmented on the {side} side",
+        "allow_side": 1,
+        "active": 1
+    },
+    {
+        "doctype": "OPG Standard Finding",
+        "name": "ms-wavy-continuous",
+        "section_name": "Maxillary Sinus",
+        "finding_label": "Floor appears wavy and continuous",
+        "finding_template": "Floor of maxillary sinus appears to be wavy and continuous",
+        "active": 1
+    },
+    {
+        "doctype": "OPG Standard Finding",
+        "name": "ms-discontinuous",
+        "section_name": "Maxillary Sinus",
+        "finding_label": "Floor appears discontinuous",
+        "finding_template": "Floor of maxillary sinus appears to be discontinuous wrt {side} side",
+        "allow_side": 1,
+        "active": 1
+    },
+    {
+        "doctype": "OPG Standard Finding",
+        "name": "ibm-continuous",
+        "section_name": "Inferior Border of Mandible",
+        "finding_label": "Appears to be continuous and intact",
+        "finding_template": "Appears to be continuous and intact",
+        "active": 1
+    },
+    {
+        "doctype": "OPG Standard Finding",
+        "name": "ibm-discontinuous",
+        "section_name": "Inferior Border of Mandible",
+        "finding_label": "Appears to be discontinuous",
+        "finding_template": "Appears to be discontinuous wrt {side} side",
+        "allow_side": 1,
+        "active": 1
+    },
+    {
+        "doctype": "OPG Standard Finding",
+        "name": "ma-complete",
+        "section_name": "Maxillary Arch",
+        "finding_label": "Complete complement set of permanent dentition noted",
+        "finding_template": "Complete complement set of permanent dentition noted",
+        "active": 1
+    },
+    {
+        "doctype": "OPG Standard Finding",
+        "name": "ma-partial",
+        "section_name": "Maxillary Arch",
+        "finding_label": "Partial complement set, missing tooth",
+        "finding_template": "Partial complement set of permanent dentition noted with missing irt tooth number {tooth_number}",
+        "allow_tooth": 1,
+        "active": 1
+    },
+    {
+        "doctype": "OPG Standard Finding",
+        "name": "ma-mixed",
+        "section_name": "Maxillary Arch",
+        "finding_label": "Mixed dentition noted",
+        "finding_template": "Mixed dentition noted",
+        "active": 1
+    },
+    {
+        "doctype": "OPG Standard Finding",
+        "name": "ma-crest-alveolar",
+        "section_name": "Maxillary Arch",
+        "finding_label": "Crest of alveolar bone level irt tooth",
+        "finding_template": "Crest of alveolar bone is at the {level} of the root irt tooth number {tooth_number}",
+        "allow_tooth": 1,
+        "allow_level": 1,
+        "active": 1
+    },
+    {
+        "doctype": "OPG Standard Finding",
+        "name": "mda-complete",
+        "section_name": "Mandibular Arch",
+        "finding_label": "Complete complement set of permanent dentition noted",
+        "finding_template": "Complete complement set of permanent dentition noted",
+        "active": 1
+    },
+    {
+        "doctype": "OPG Standard Finding",
+        "name": "mda-partial",
+        "section_name": "Mandibular Arch",
+        "finding_label": "Partial complement set, missing tooth",
+        "finding_template": "Partial complement set of permanent dentition noted with missing irt tooth number {tooth_number}",
+        "allow_tooth": 1,
+        "active": 1
+    },
+    {
+        "doctype": "OPG Standard Finding",
+        "name": "mda-mixed",
+        "section_name": "Mandibular Arch",
+        "finding_label": "Mixed dentition noted",
+        "finding_template": "Mixed dentition noted",
+        "active": 1
+    },
+    {
+        "doctype": "OPG Standard Finding",
+        "name": "mda-crest-alveolar",
+        "section_name": "Mandibular Arch",
+        "finding_label": "Crest of alveolar bone level irt tooth",
+        "finding_template": "Crest of alveolar bone is at the {level} of the root irt tooth number {tooth_number}",
+        "allow_tooth": 1,
+        "allow_level": 1,
+        "active": 1
+    },
+    {
+        "doctype": "OPG Standard Finding",
+        "name": "ri-wnl",
+        "section_name": "Radiologic Impression",
+        "finding_label": "Within normal limits",
+        "finding_template": "Radiographic findings are within normal limits",
+        "active": 1
+    },
+    {
+        "doctype": "OPG Standard Finding",
+        "name": "ri-correlate",
+        "section_name": "Radiologic Impression",
+        "finding_label": "Clinical correlation advised",
+        "finding_template": "Clinical correlation advised",
+        "active": 1
+    }
+]

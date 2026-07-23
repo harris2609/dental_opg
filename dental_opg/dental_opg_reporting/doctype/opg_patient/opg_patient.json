@@ -1,0 +1,49 @@
+{
+    "name": "OPG Patient",
+    "module": "Dental OPG Reporting",
+    "doctype": "DocType",
+    "engine": "InnoDB",
+    "autoname": "format:PAT-{#####}",
+    "naming_rule": "Expression",
+    "is_submittable": 0,
+    "sort_field": "modified",
+    "sort_order": "DESC",
+    "fields": [
+        {
+            "fieldname": "patient_name",
+            "fieldtype": "Data",
+            "label": "Patient Name",
+            "reqd": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "age",
+            "fieldtype": "Int",
+            "label": "Age",
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "sex",
+            "fieldtype": "Select",
+            "label": "Sex",
+            "options": "\nMale\nFemale\nOther",
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "registration_no",
+            "fieldtype": "Data",
+            "label": "Registration No",
+            "unique": 1,
+            "in_list_view": 1
+        }
+    ],
+    "permissions": [
+        {
+            "role": "System Manager",
+            "read": 1,
+            "write": 1,
+            "create": 1,
+            "delete": 1
+        }
+    ]
+}

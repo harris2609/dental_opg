@@ -1,0 +1,65 @@
+[
+    {
+        "doctype": "OPG Tooth Finding",
+        "name": "missing",
+        "finding_name": "Missing",
+        "finding_template": "Tooth {tooth_number}: missing",
+        "active": 1
+    },
+    {
+        "doctype": "OPG Tooth Finding",
+        "name": "caries",
+        "finding_name": "Caries",
+        "finding_template": "Tooth {tooth_number}: caries noted",
+        "active": 1
+    },
+    {
+        "doctype": "OPG Tooth Finding",
+        "name": "root-stump",
+        "finding_name": "Root stump",
+        "finding_template": "Tooth {tooth_number}: root stump noted",
+        "active": 1
+    },
+    {
+        "doctype": "OPG Tooth Finding",
+        "name": "impacted",
+        "finding_name": "Impacted",
+        "finding_template": "Tooth {tooth_number}: impacted",
+        "active": 1
+    },
+    {
+        "doctype": "OPG Tooth Finding",
+        "name": "restored",
+        "finding_name": "Restored",
+        "finding_template": "Tooth {tooth_number}: restored",
+        "active": 1
+    },
+    {
+        "doctype": "OPG Tooth Finding",
+        "name": "fracture",
+        "finding_name": "Fracture",
+        "finding_template": "Tooth {tooth_number}: fracture noted",
+        "active": 1
+    },
+    {
+        "doctype": "OPG Tooth Finding",
+        "name": "bone-loss",
+        "finding_name": "Bone loss",
+        "finding_template": "Tooth {tooth_number}: associated bone loss noted",
+        "active": 1
+    },
+    {
+        "doctype": "OPG Tooth Finding",
+        "name": "periapical-radiolucency",
+        "finding_name": "Periapical radiolucency",
+        "finding_template": "Tooth {tooth_number}: periapical radiolucency noted",
+        "active": 1
+    },
+    {
+        "doctype": "OPG Tooth Finding",
+        "name": "mobility",
+        "finding_name": "Mobility",
+        "finding_template": "Tooth {tooth_number}: mobility noted",
+        "active": 1
+    }
+]

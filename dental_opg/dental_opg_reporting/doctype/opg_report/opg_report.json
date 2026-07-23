@@ -1,0 +1,119 @@
+{
+    "name": "OPG Report",
+    "module": "Dental OPG Reporting",
+    "doctype": "DocType",
+    "engine": "InnoDB",
+    "autoname": "format:OPG-REP-{#####}",
+    "naming_rule": "Expression",
+    "is_submittable": 0,
+    "track_changes": 1,
+    "sort_field": "modified",
+    "sort_order": "DESC",
+    "fields": [
+        {
+            "fieldname": "patient",
+            "fieldtype": "Link",
+            "label": "Patient",
+            "options": "OPG Patient",
+            "reqd": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "report_date",
+            "fieldtype": "Date",
+            "label": "Report Date",
+            "default": "Today",
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "referred_by",
+            "fieldtype": "Data",
+            "label": "Referred By"
+        },
+        {
+            "fieldname": "radiographic_projection",
+            "fieldtype": "Data",
+            "label": "Radiographic Projection",
+            "default": "OPG"
+        },
+        {
+            "fieldname": "status",
+            "fieldtype": "Select",
+            "label": "Status",
+            "options": "Draft\nFinal",
+            "default": "Draft",
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "column_break_1",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "clinical_diagnosis",
+            "fieldtype": "Small Text",
+            "label": "Clinical Diagnosis"
+        },
+        {
+            "fieldname": "opg_image",
+            "fieldtype": "Attach Image",
+            "label": "OPG Image"
+        },
+        {
+            "fieldname": "section_break_findings",
+            "fieldtype": "Section Break",
+            "label": "Findings"
+        },
+        {
+            "fieldname": "section_findings",
+            "fieldtype": "Table",
+            "label": "Section Findings",
+            "options": "OPG Report Finding"
+        },
+        {
+            "fieldname": "tooth_findings",
+            "fieldtype": "Table",
+            "label": "Tooth Findings",
+            "options": "OPG Tooth Finding Entry"
+        },
+        {
+            "fieldname": "annotations",
+            "fieldtype": "Table",
+            "label": "Image Annotations",
+            "options": "OPG Annotation"
+        },
+        {
+            "fieldname": "section_break_report",
+            "fieldtype": "Section Break",
+            "label": "Generated Report"
+        },
+        {
+            "fieldname": "generated_report_text",
+            "fieldtype": "Text Editor",
+            "label": "Generated Report Text",
+            "read_only": 1
+        },
+        {
+            "fieldname": "column_break_2",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "reported_by",
+            "fieldtype": "Data",
+            "label": "Reported By"
+        },
+        {
+            "fieldname": "verified_by",
+            "fieldtype": "Data",
+            "label": "Verified By"
+        }
+    ],
+    "permissions": [
+        {
+            "role": "System Manager",
+            "read": 1,
+            "write": 1,
+            "create": 1,
+            "delete": 1
+        }
+    ]
+}
