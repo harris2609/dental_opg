@@ -33,6 +33,12 @@ class OPGReport(Document):
 
 	@frappe.whitelist(methods=["POST"])
 	def add_incidental_finding(self, finding_type: str, side: str, severity: str) -> str:
+		# run_doc_method only checks read permission on OPG Report before calling
+		# this; the actual create-guard is finding.insert() checking create on
+		# OPG Incidental Finding below. Both are System-Manager-only today, so
+		# there's no gap - but if roles ever diverge (e.g. a role with read-only
+		# on OPG Report plus create on OPG Incidental Finding), that role could
+		# attach findings to reports it can't otherwise edit.
 		finding = frappe.get_doc(
 			{
 				"doctype": "OPG Incidental Finding",

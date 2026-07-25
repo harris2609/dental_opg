@@ -9,6 +9,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     ImageViewer: typeof import('./src/components/ImageViewer.vue')['default']
+    IncidentalFindingsCard: typeof import('./src/components/IncidentalFindingsCard.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SectionCard: typeof import('./src/components/SectionCard.vue')['default']

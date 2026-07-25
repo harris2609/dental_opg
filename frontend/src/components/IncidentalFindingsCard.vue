@@ -11,6 +11,7 @@
 				<span class="min-w-[8rem] flex-1">{{ row.finding_type }}</span>
 				<span class="w-20 text-gray-600">{{ row.side }}</span>
 				<span class="w-20 text-gray-600">{{ row.severity }}</span>
+				<span class="w-24 text-gray-500">{{ row.finding_date }}</span>
 				<button class="text-red-600" @click="remove(row)">remove</button>
 			</div>
 		</div>
@@ -69,7 +70,7 @@ async function add() {
 			side: form.side,
 			severity: form.severity,
 		})
-		findings.value = [...findings.value, { name, ...form }]
+		findings.value = [...findings.value, { name, ...form, finding_date: new Date().toISOString().slice(0, 10) }]
 		form.finding_type = ''
 		form.side = ''
 		form.severity = ''

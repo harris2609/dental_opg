@@ -42,7 +42,8 @@ free once this is a real DocType — no custom list UI needed.
 
 ## Backend
 
-Two doc-level whitelisted methods on `OPGReport`:
+One new doc-level whitelisted method on `OPGReport` (list/delete reuse generic
+`frappe.client.*` endpoints, no new backend code needed for those):
 
 - `add_incidental_finding(finding_type, side, severity)` — creates and inserts a new
   `OPG Incidental Finding` doc, stamping `report`, `patient`, `reported_by` from `self`.

@@ -32,20 +32,21 @@ class TestOPGReport(IntegrationTestCase):
 		self.assertEqual(finding.side, "Left")
 		self.assertEqual(finding.severity, "Moderate")
 
-	def test_add_incidental_finding_ignores_client_supplied_patient(self):
-		"""patient/reported_by must come from the report, never from caller input"""
+	def test_add_incidental_finding_rejects_client_supplied_patient(self):
+		"""patient/reported_by must come from the report, never from caller input -
+		the method signature has no patient/reported_by parameter, so an injection
+		attempt must fail loudly (TypeError) rather than silently succeed."""
 		other_patient = frappe.get_doc(
 			doctype="OPG Patient",
 			patient_name="Other Patient",
 			registration_no=frappe.generate_hash(length=8),
 		).insert()
 
-		name = self.report.add_incidental_finding(
+		self.assertRaises(
+			TypeError,
+			self.report.add_incidental_finding,
 			finding_type="Retained root",
 			side="Right",
 			severity="Mild",
+			patient=other_patient.name,
 		)
-
-		finding = frappe.get_doc("OPG Incidental Finding", name)
-		self.assertEqual(finding.patient, self.patient.name)
-		self.assertNotEqual(finding.patient, other_patient.name)
