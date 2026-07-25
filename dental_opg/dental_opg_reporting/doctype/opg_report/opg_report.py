@@ -30,3 +30,19 @@ class OPGReport(Document):
 		self.generated_report_text = build_report_text(self)
 		self.save()
 		return self.generated_report_text
+
+	@frappe.whitelist(methods=["POST"])
+	def add_incidental_finding(self, finding_type: str, side: str, severity: str) -> str:
+		finding = frappe.get_doc(
+			{
+				"doctype": "OPG Incidental Finding",
+				"report": self.name,
+				"patient": self.patient,
+				"reported_by": self.reported_by,
+				"finding_type": finding_type,
+				"side": side,
+				"severity": severity,
+			}
+		)
+		finding.insert()
+		return finding.name
