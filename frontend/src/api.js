@@ -75,6 +75,32 @@ export function generateReport(name) {
 	return callDocMethod(name, 'generate_report', {})
 }
 
+export function getIncidentalFindings(reportName) {
+	return frappeRequest({
+		url: '/api/method/frappe.client.get_list',
+		method: 'GET',
+		params: {
+			doctype: 'OPG Incidental Finding',
+			filters: JSON.stringify({ report: reportName }),
+			fields: JSON.stringify(['name', 'finding_type', 'side', 'severity', 'finding_date']),
+			order_by: 'creation asc',
+			limit_page_length: 0,
+		},
+	})
+}
+
+export function addIncidentalFinding(reportName, { finding_type, side, severity }) {
+	return callDocMethod(reportName, 'add_incidental_finding', { finding_type, side, severity })
+}
+
+export function deleteIncidentalFinding(name) {
+	return frappeRequest({
+		url: '/api/method/frappe.client.delete',
+		method: 'POST',
+		params: { doctype: 'OPG Incidental Finding', name },
+	})
+}
+
 // upload_file only creates the File record (with attached_to_* metadata for
 // the attachments list) - it does NOT write the file_url back into the
 // parent doc's field. That's normally done by Desk's attach widget; since
