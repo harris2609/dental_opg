@@ -77,6 +77,8 @@
 					</div>
 				</template>
 
+				<IncidentalFindingsCard :report-name="report.name" />
+
 				<div v-if="report.generated_report_text" class="rounded border bg-white p-4">
 					<h2 class="mb-2 text-sm font-semibold text-gray-800">Generated Report Text</h2>
 					<pre class="whitespace-pre-wrap text-xs text-gray-700">{{ report.generated_report_text }}</pre>
@@ -91,6 +93,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import ImageViewer from '../components/ImageViewer.vue'
 import ToothChart from '../components/ToothChart.vue'
 import SectionCard from '../components/SectionCard.vue'
+import IncidentalFindingsCard from '../components/IncidentalFindingsCard.vue'
 import {
 	getReport,
 	getSetupData,
