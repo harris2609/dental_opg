@@ -52,6 +52,14 @@ export function listReports() {
 	})
 }
 
+export function saveReportDetails(name, fields) {
+	return frappeRequest({
+		url: '/api/method/frappe.client.set_value',
+		method: 'POST',
+		params: { doctype: DOCTYPE, name, fieldname: fields },
+	})
+}
+
 export function saveFindings(name, sectionFindings, toothFindings) {
 	return callDocMethod(name, 'save_findings', {
 		section_findings: sectionFindings,

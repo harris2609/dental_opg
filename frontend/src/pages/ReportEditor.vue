@@ -46,6 +46,14 @@
 							<label class="mb-1 block font-medium">Clinical Diagnosis</label>
 							<textarea v-model="report.clinical_diagnosis" rows="2" class="w-full rounded border px-2 py-1"></textarea>
 						</div>
+						<div>
+							<label class="mb-1 block font-medium">Reported By</label>
+							<input v-model="report.reported_by" class="w-full rounded border px-2 py-1" />
+						</div>
+						<div>
+							<label class="mb-1 block font-medium">Verified By</label>
+							<input v-model="report.verified_by" class="w-full rounded border px-2 py-1" />
+						</div>
 					</div>
 				</div>
 
@@ -83,7 +91,15 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import ImageViewer from '../components/ImageViewer.vue'
 import ToothChart from '../components/ToothChart.vue'
 import SectionCard from '../components/SectionCard.vue'
-import { getReport, getSetupData, saveFindings, saveAnnotations, generateReport, uploadImage } from '../api'
+import {
+	getReport,
+	getSetupData,
+	saveReportDetails,
+	saveFindings,
+	saveAnnotations,
+	generateReport,
+	uploadImage,
+} from '../api'
 
 const props = defineProps({ reportId: { type: String, required: true } })
 
@@ -128,6 +144,14 @@ function updateToothFindings(arch, rows) {
 async function save() {
 	saving.value = true
 	try {
+		await saveReportDetails(report.name, {
+			report_date: report.report_date,
+			referred_by: report.referred_by,
+			clinical_diagnosis: report.clinical_diagnosis,
+			status: report.status,
+			reported_by: report.reported_by,
+			verified_by: report.verified_by,
+		})
 		await saveFindings(report.name, sectionFindings.value, toothFindings.value)
 		await saveAnnotations(report.name, annotations.value)
 	} finally {
