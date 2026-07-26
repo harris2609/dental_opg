@@ -11,6 +11,7 @@
 					{{ generating ? 'Generating...' : 'Generate Report' }}
 				</button>
 				<a class="actionbtn inline-block" :href="printUrl" target="_blank">Print</a>
+				<a class="actionbtn inline-block" :href="docxExportUrl">Export DOCX</a>
 			</div>
 		</div>
 
@@ -118,6 +119,10 @@ const annotations = ref([])
 const imageSrc = computed(() => report.opg_image || '')
 const printUrl = computed(
 	() => `/printview?doctype=OPG%20Report&name=${encodeURIComponent(report.name || '')}&format=OPG%20Report`,
+)
+const docxExportUrl = computed(
+	() =>
+		`/api/method/dental_opg.dental_opg_reporting.doctype.opg_report.opg_report.export_report_docx?name=${encodeURIComponent(report.name || '')}`,
 )
 
 onMounted(async () => {
