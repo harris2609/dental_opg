@@ -57,25 +57,34 @@ def _metadata_replacements(report, patient) -> dict:
 	}
 
 
+def _iter_table_paragraphs(table):
+	for row in table.rows:
+		for cell in row.cells:
+			yield from cell.paragraphs
+
+
 def _iter_all_paragraphs(doc):
+	"""Every paragraph a token could live in: body, body tables, and the
+	footer (its own paragraphs plus the "Reported by"/"Verified by" table -
+	the footer is a separate part from the body, not reachable via
+	doc.paragraphs/doc.tables, which is exactly how {{reported_by}} and
+	{{verified_by}} went unfilled despite two prior reviews passing."""
 	yield from doc.paragraphs
 	for table in doc.tables:
-		for row in table.rows:
-			for cell in row.cells:
-				yield from cell.paragraphs
+		yield from _iter_table_paragraphs(table)
+	footer = doc.sections[0].footer
+	yield from footer.paragraphs
+	for table in footer.tables:
+		yield from _iter_table_paragraphs(table)
 
 
 def _replace_tokens(doc, replacements: dict):
 	for p in _iter_all_paragraphs(doc):
 		for run in p.runs:
-			if run.text in replacements:
-				run.text = replacements[run.text]
-			else:
-				# Handle partial replacements for tokens embedded in text
-				text = run.text
-				for token, value in replacements.items():
-					text = text.replace(token, value)
-				run.text = text
+			text = run.text
+			for token, value in replacements.items():
+				text = text.replace(token, value)
+			run.text = text
 
 
 def _insert_image(doc, report):

@@ -41,3 +41,22 @@ class TestDocxExport(IntegrationTestCase):
 
 		self.assertIn("Condylar morphology appears to be normal", all_text)
 		self.assertNotIn("STYLOID PROCESS", all_text)
+
+	def test_build_docx_fills_footer_tokens(self):
+		"""The footer (Reported by / Verified by) is a separate docx part
+		from the body - not reachable via result_doc.paragraphs alone. A
+		prior version of this test only checked body paragraphs and missed
+		that these tokens were going unfilled."""
+		content = build_docx(self.report)
+		result_doc = DocxDocument(io.BytesIO(content))
+		footer = result_doc.sections[0].footer
+
+		footer_text = "\n".join(p.text for p in footer.paragraphs)
+		for table in footer.tables:
+			for row in table.rows:
+				for cell in row.cells:
+					footer_text += "\n" + cell.text
+
+		self.assertIn("Dr. Test Reporter", footer_text)
+		self.assertIn("Dr. Test Verifier", footer_text)
+		self.assertNotIn("{{", footer_text)
