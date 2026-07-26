@@ -70,6 +70,12 @@ def _replace_tokens(doc, replacements: dict):
 		for run in p.runs:
 			if run.text in replacements:
 				run.text = replacements[run.text]
+			else:
+				# Handle partial replacements for tokens embedded in text
+				text = run.text
+				for token, value in replacements.items():
+					text = text.replace(token, value)
+				run.text = text
 
 
 def _insert_image(doc, report):

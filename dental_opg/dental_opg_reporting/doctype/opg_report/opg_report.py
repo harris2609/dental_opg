@@ -52,3 +52,20 @@ class OPGReport(Document):
 		)
 		finding.insert()
 		return finding.name
+
+
+@frappe.whitelist(methods=["GET"])
+def export_report_docx(name: str):
+	from dental_opg.dental_opg_reporting.docx_export import build_docx
+
+	report = frappe.get_doc("OPG Report", name)
+	report.check_permission("read")
+
+	content = build_docx(report)
+
+	frappe.local.response.filename = f"{report.name}.docx"
+	frappe.local.response.filecontent = content
+	frappe.local.response.content_type = (
+		"application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+	)
+	frappe.local.response.type = "download"
