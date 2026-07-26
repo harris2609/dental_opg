@@ -42,6 +42,32 @@ class TestDocxExport(IntegrationTestCase):
 		self.assertIn("Condylar morphology appears to be normal", all_text)
 		self.assertNotIn("STYLOID PROCESS", all_text)
 
+	def test_build_docx_fills_body_table_tokens(self):
+		"""The patient/report metadata table is body-level (unlike the
+		footer), but result_doc.paragraphs alone doesn't reach table cell
+		content either - table text has to be read via result_doc.tables.
+		Nothing previously asserted these tokens actually get filled, only
+		that the underlying replace function walks doc.tables at all."""
+		self.report.referred_by = "Dr. Referring Doctor"
+		self.report.clinical_diagnosis = "Routine screening"
+		self.report.save()
+
+		content = build_docx(self.report)
+		result_doc = DocxDocument(io.BytesIO(content))
+
+		table_text = ""
+		for table in result_doc.tables:
+			for row in table.rows:
+				for cell in row.cells:
+					table_text += cell.text + "\n"
+
+		self.assertIn("Docx Export Test", table_text)
+		self.assertIn("45", table_text)
+		self.assertIn(self.patient.registration_no, table_text)
+		self.assertIn("Dr. Referring Doctor", table_text)
+		self.assertIn("Routine screening", table_text)
+		self.assertNotIn("{{", table_text)
+
 	def test_build_docx_fills_footer_tokens(self):
 		"""The footer (Reported by / Verified by) is a separate docx part
 		from the body - not reachable via result_doc.paragraphs alone. A
