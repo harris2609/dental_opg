@@ -68,16 +68,15 @@ def get_annotated_image_bytes(report):
 	one flattened image instead of relying on an HTML/SVG overlay that
 	wkhtmltopdf has no reliable way to align against a static render.
 
-	Returns None if there's no image at all. Returns the original bytes
-	unchanged if there's an image but no annotations.
+	Returns None if there's no image at all. Always returns JPEG bytes,
+	even with no annotations to draw - the source image may be a PNG
+	upload, and callers (the print format, wkhtmltopdf) rely on the
+	content-type they set matching the actual bytes.
 	"""
 	if not report.opg_image:
 		return None
 
 	_, content = get_file(report.opg_image)
-
-	if not report.annotations:
-		return content
 
 	image = Image.open(io.BytesIO(content)).convert("RGB")
 	draw = ImageDraw.Draw(image)

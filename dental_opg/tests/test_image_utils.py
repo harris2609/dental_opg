@@ -28,12 +28,31 @@ class TestImageUtils(IntegrationTestCase):
 	def test_no_image_returns_none(self):
 		self.assertIsNone(get_annotated_image_bytes(self.report))
 
-	def test_image_with_no_annotations_returns_original_bytes(self):
+	def test_image_with_no_annotations_returns_same_pixels_as_jpeg(self):
+		"""Bytes aren't expected to be identical - the function always
+		re-encodes to JPEG (see test_png_source_with_no_annotations_is_served_as_jpeg
+		for why) - but the pixel content must be unchanged."""
 		original_bytes = _make_test_jpeg_bytes()
 		self._attach_image(original_bytes)
 
 		result = get_annotated_image_bytes(self.report)
-		self.assertEqual(result, original_bytes)
+		result_image = Image.open(io.BytesIO(result))
+		self.assertEqual(result_image.format, "JPEG")
+		self.assertEqual(result_image.convert("RGB").getpixel((50, 30)), (200, 200, 200))
+
+	def test_png_source_with_no_annotations_is_served_as_jpeg(self):
+		"""The print endpoint hardcodes content_type=image/jpeg and a .jpg
+		filename - if the source upload was a PNG and this function just
+		passed the original bytes through untouched, wkhtmltopdf would
+		receive PNG bytes mislabeled as JPEG."""
+		buffer = io.BytesIO()
+		Image.new("RGB", (100, 60), color=(200, 200, 200)).save(buffer, format="PNG")
+		png_bytes = buffer.getvalue()
+		self._attach_image(png_bytes, file_name="test_opg.png")
+
+		result = get_annotated_image_bytes(self.report)
+		result_image = Image.open(io.BytesIO(result))
+		self.assertEqual(result_image.format, "JPEG")
 
 	def test_image_with_annotations_differs_from_original(self):
 		"""Asserting the raw bytes differ isn't enough - re-encoding as JPEG at
@@ -64,14 +83,14 @@ class TestImageUtils(IntegrationTestCase):
 		self.assertGreater(corner_pixel[1], 150)
 		self.assertGreater(corner_pixel[2], 150)
 
-	def _attach_image(self, content):
+	def _attach_image(self, content, file_name="test_opg.jpg"):
 		file_doc = frappe.get_doc(
 			{
 				"doctype": "File",
 				"attached_to_doctype": "OPG Report",
 				"attached_to_name": self.report.name,
 				"attached_to_field": "opg_image",
-				"file_name": "test_opg.jpg",
+				"file_name": file_name,
 				"content": content,
 				"is_private": 0,
 			}
