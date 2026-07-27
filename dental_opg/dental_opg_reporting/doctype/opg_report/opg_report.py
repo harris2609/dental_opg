@@ -16,8 +16,58 @@ class OPGReport(Document):
 			self.set("section_findings", section_findings)
 		if tooth_findings is not None:
 			self.set("tooth_findings", tooth_findings)
+		self._promote_custom_findings_to_master_lists()
 		self.save()
 		return {"name": self.name}
+
+	def _promote_custom_findings_to_master_lists(self):
+		"""Any custom finding a dentist typed into an 'add custom' box becomes a
+		reusable master record the moment findings are saved - a side effect
+		only, the row's own saved is_custom/custom_text/finding fields are
+		never touched. Dedup by exact text match so repeat use doesn't create
+		duplicate master entries."""
+		for row in self.section_findings:
+			if not row.is_custom:
+				continue
+			text = (row.custom_text or "").strip()
+			if not text:
+				continue
+			exists = frappe.db.exists(
+				"OPG Standard Finding", {"section_name": row.section, "finding_label": text}
+			)
+			if not exists:
+				frappe.get_doc(
+					{
+						"doctype": "OPG Standard Finding",
+						"section_name": row.section,
+						"finding_label": text,
+						"finding_template": text,
+						"allow_side": 0,
+						"allow_tooth": 0,
+						"allow_level": 0,
+						"active": 1,
+					}
+				).insert(ignore_permissions=True)
+
+		for row in self.tooth_findings:
+			if row.finding:
+				continue
+			finding_name = (row.finding_name or "").strip()
+			description = (row.description or "").strip()
+			if not (finding_name and description):
+				continue
+			exists = frappe.db.exists(
+				"OPG Tooth Finding", {"finding_name": finding_name, "description_template": description}
+			)
+			if not exists:
+				frappe.get_doc(
+					{
+						"doctype": "OPG Tooth Finding",
+						"finding_name": finding_name,
+						"description_template": description,
+						"active": 1,
+					}
+				).insert(ignore_permissions=True)
 
 	@frappe.whitelist(methods=["POST"])
 	def save_annotations(self, annotations: list):
