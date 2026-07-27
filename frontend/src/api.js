@@ -104,6 +104,19 @@ export function getIncidentalFindings(reportName) {
 	})
 }
 
+export function listAllIncidentalFindings() {
+	return frappeRequest({
+		url: '/api/method/frappe.client.get_list',
+		method: 'GET',
+		params: {
+			doctype: 'OPG Incidental Finding',
+			fields: JSON.stringify(['name', 'report', 'patient', 'finding_type', 'side', 'severity', 'finding_date', 'reported_by']),
+			order_by: 'finding_date desc, creation desc',
+			limit_page_length: 0,
+		},
+	})
+}
+
 export function addIncidentalFinding(reportName, { finding_type, side, severity }) {
 	return callDocMethod(reportName, 'add_incidental_finding', { finding_type, side, severity })
 }
