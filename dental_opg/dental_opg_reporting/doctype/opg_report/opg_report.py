@@ -69,3 +69,20 @@ def export_report_docx(name: str):
 		"application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 	)
 	frappe.local.response.type = "download"
+
+
+@frappe.whitelist(methods=["GET"])
+def get_annotated_report_image(name: str):
+	from dental_opg.dental_opg_reporting.image_utils import get_annotated_image_bytes
+
+	report = frappe.get_doc("OPG Report", name)
+	report.check_permission("read")
+
+	content = get_annotated_image_bytes(report)
+	if content is None:
+		frappe.throw(frappe._("Report {0} has no OPG image").format(name), frappe.DoesNotExistError)
+
+	frappe.local.response.filename = f"{report.name}.jpg"
+	frappe.local.response.filecontent = content
+	frappe.local.response.content_type = "image/jpeg"
+	frappe.local.response.type = "binary"

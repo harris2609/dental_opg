@@ -8,8 +8,8 @@ from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Inches
 from docx.text.paragraph import Paragraph
-from frappe.utils.file_manager import get_file
 
+from dental_opg.dental_opg_reporting.image_utils import get_annotated_image_bytes
 from dental_opg.dental_opg_reporting.report_builder import build_report_sections
 
 TEMPLATE_PATH = Path(__file__).parent / "templates" / "opg_report_template.docx"
@@ -92,9 +92,9 @@ def _insert_image(doc, report):
 	if marker is None:
 		return
 	marker.text = ""
-	if not report.opg_image:
+	content = get_annotated_image_bytes(report)
+	if content is None:
 		return
-	_, content = get_file(report.opg_image)
 	marker.alignment = 1  # center
 	run = marker.add_run()
 	run.add_picture(io.BytesIO(content), width=Inches(6))
