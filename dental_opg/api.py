@@ -69,3 +69,26 @@ def create_report(
 	report = frappe.get_doc({"doctype": "OPG Report", "patient": patient, "status": "Draft"})
 	report.insert()
 	return {"report": report.name, "patient": patient}
+
+
+@frappe.whitelist(methods=["GET"])
+def export_incidental_findings_xlsx():
+	from frappe.utils.xlsxutils import make_xlsx
+
+	fields = ["report", "patient", "finding_type", "side", "severity", "finding_date", "reported_by"]
+	headers = ["Report", "Patient", "Finding Type", "Side", "Severity", "Finding Date", "Reported By"]
+
+	records = frappe.get_all(
+		"OPG Incidental Finding",
+		fields=fields,
+		order_by="finding_date desc, creation desc",
+	)
+
+	data = [headers] + [[record.get(f) for f in fields] for record in records]
+
+	xlsx_file = make_xlsx(data, "Incidental Findings")
+
+	frappe.local.response.filename = "incidental_findings.xlsx"
+	frappe.local.response.filecontent = xlsx_file.getvalue()
+	frappe.local.response.content_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+	frappe.local.response.type = "download"
