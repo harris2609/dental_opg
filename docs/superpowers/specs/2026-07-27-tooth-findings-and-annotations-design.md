@@ -95,13 +95,24 @@ the description is already resolved and stored on the entry when it's added.
 This simplifies `_tooth_finding_lines` (drops its `frappe.get_all` lookup
 entirely).
 
+**Multi-tooth merging** (added per follow-up): entries within the same arch
+section are grouped by exact `(finding_name, description)` match before
+rendering - one combined line per group, tooth numbers joined in first-seen
+(entry list) order: `"irt 16, 17 - {description}"` rather than one line each.
+No new field needed for this - it's a render-time grouping over the existing
+one-row-per-tooth entries, so if a dentist later edits one tooth's description
+independently, that entry naturally falls out of the group (text no longer
+matches) and prints as its own line - no explicit "linked group" concept to
+maintain in the data model.
+
 After building the normal 7 sections, append to Radiologic Impression: one
 line per **distinct** `finding_name` used across all of `report.tooth_findings`
-(confirmed: deduplicated, not once per tooth), in first-seen order. Not
-cross-checked against whatever the dentist typed into Radiologic Impression
-directly - a rare duplicate line is a non-issue now that the generated text is
-editable (§5), so the dentist can just trim it rather than the code needing to
-detect it.
+(confirmed: deduplicated, not once per tooth - unaffected by the merging
+above, which only affects how the arch-section lines are grouped, not the
+Radiologic Impression summary), in first-seen order. Not cross-checked against
+whatever the dentist typed into Radiologic Impression directly - a rare
+duplicate line is a non-issue now that the generated text is editable (§5), so
+the dentist can just trim it rather than the code needing to detect it.
 
 ## 4. Tooth-chart UI (`ToothChart.vue`)
 
@@ -111,6 +122,18 @@ Replaces the current checkbox multi-toggle with an "add finding" flow matching
 row shows an editable description textarea (pre-filled from the master
 template, or blank for custom) and a remove button. Multiple entries per tooth
 allowed, including repeats of the same finding.
+
+**Multi-tooth selection** (added per follow-up): a "select multiple teeth"
+mode toggle. Off (default): clicking a tooth behaves as today - opens that
+one tooth's panel directly. On: clicking teeth toggles them into a
+highlighted "selected" set (no panel opens per click); once one or more teeth
+are selected, one shared add-finding panel appears below the chart (same
+dropdown + editable description as the single-tooth panel). Clicking "Add"
+creates one entry per selected tooth, all sharing the identical finding_name
+and description text at creation time - which is exactly what makes them
+group into one combined report line per §3. Turning multi-select off (or
+selecting a new set) clears the current selection; it's a transient UI mode,
+not stored state.
 
 ## 5. Editable report text
 
