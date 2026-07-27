@@ -16,6 +16,21 @@ function callDocMethod(name, method, args) {
 	}).then((r) => (r && r.docs ? r.message : r))
 }
 
+export function login(usr, pwd) {
+	return frappeRequest({
+		url: '/api/method/login',
+		method: 'POST',
+		params: { usr, pwd },
+	})
+}
+
+export function logout() {
+	return frappeRequest({
+		url: '/api/method/logout',
+		method: 'POST',
+	})
+}
+
 export function getSetupData() {
 	return frappeRequest({
 		url: '/api/method/dental_opg.api.get_reporting_setup_data',
