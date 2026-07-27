@@ -17,10 +17,10 @@
             "in_list_view": 1
         },
         {
-            "fieldname": "finding_template",
+            "fieldname": "description_template",
             "fieldtype": "Small Text",
-            "label": "Finding Template",
-            "description": "Use {tooth_number} as placeholder, e.g. 'Tooth {tooth_number}: caries noted'",
+            "label": "Description Template",
+            "description": "Canned description shown when this finding is picked for a tooth - editable per entry afterward.",
             "reqd": 1
         },
         {

@@ -1,65 +1,149 @@
 [
     {
         "doctype": "OPG Tooth Finding",
-        "name": "missing",
-        "finding_name": "Missing",
-        "finding_template": "Tooth {tooth_number}: missing",
+        "name": "dental-caries",
+        "finding_name": "Dental Caries",
+        "description_template": "Coronally- an ill-defined radiolucency involving enamel and dentin on the mesial aspect Radicularly-no changes appreciated Periapically- no changes appreciated",
         "active": 1
     },
     {
         "doctype": "OPG Tooth Finding",
-        "name": "caries",
-        "finding_name": "Caries",
-        "finding_template": "Tooth {tooth_number}: caries noted",
+        "name": "dental-caries-involving-pulp",
+        "finding_name": "Dental Caries Involving Pulp",
+        "description_template": "Coronally- an ill-defined radiolucency involving enamel dentin and approximating pulp on the mesial aspect Radicularly-no changes appreciated Periapically- no changes appreciated",
         "active": 1
     },
     {
         "doctype": "OPG Tooth Finding",
-        "name": "root-stump",
-        "finding_name": "Root stump",
-        "finding_template": "Tooth {tooth_number}: root stump noted",
+        "name": "secondary-caries",
+        "finding_name": "Secondary Caries",
+        "description_template": "Coronally-a well-defined radiopacity noted s/o restorative material beneath which ill defined radiolucency approximating pulp noted Radicularly-no changes appreciated Periapically- no changes appreciated.",
         "active": 1
     },
     {
         "doctype": "OPG Tooth Finding",
-        "name": "impacted",
-        "finding_name": "Impacted",
-        "finding_template": "Tooth {tooth_number}: impacted",
+        "name": "periapical-abscess",
+        "finding_name": "Periapical Abscess",
+        "description_template": "Coronally-an ill-defined radiolucency involving enamel dentin and approximating pulp on the mesioproximal aspect noted Radicularly- no changes appreciated Periapically - loss of lamina dura with ill defined hazy radiolucency noted",
         "active": 1
     },
     {
         "doctype": "OPG Tooth Finding",
-        "name": "restored",
-        "finding_name": "Restored",
-        "finding_template": "Tooth {tooth_number}: restored",
+        "name": "chronic-apical-periodontitis",
+        "finding_name": "Chronic Apical Periodontitis",
+        "description_template": "Coronally-an ill-defined radiolucency involving enamel dentin and approximating pulp on the mesioproximal aspect noted Radicularly- no changes appreciated Periapically – widening of pdl space noted",
         "active": 1
     },
     {
         "doctype": "OPG Tooth Finding",
-        "name": "fracture",
-        "finding_name": "Fracture",
-        "finding_template": "Tooth {tooth_number}: fracture noted",
+        "name": "grossly-decayed",
+        "finding_name": "Grossly Decayed",
+        "description_template": "Coronally- an ill-defined radiolucency involving enamel dentin and approximating pulp with partial loss of crown structure Radicularly-no changes appreciated Periapically- no changes appreciated",
         "active": 1
     },
     {
         "doctype": "OPG Tooth Finding",
-        "name": "bone-loss",
-        "finding_name": "Bone loss",
-        "finding_template": "Tooth {tooth_number}: associated bone loss noted",
+        "name": "root-stumps",
+        "finding_name": "Root Stumps",
+        "description_template": "Coronally- complete loss of crown structure Radicularly-no changes appreciated Periapically- no changes appreciated",
         "active": 1
     },
     {
         "doctype": "OPG Tooth Finding",
-        "name": "periapical-radiolucency",
-        "finding_name": "Periapical radiolucency",
-        "finding_template": "Tooth {tooth_number}: periapical radiolucency noted",
+        "name": "root-caries",
+        "finding_name": "Root Caries",
+        "description_template": "Coronally- an ill-defined radiolucency involving enamel dentin and approximating pulp on the mesial aspect Radicularly- ill defined radiolucency noted on the cervical third approximating canals Periapically- no changes appreciated",
         "active": 1
     },
     {
         "doctype": "OPG Tooth Finding",
-        "name": "mobility",
-        "finding_name": "Mobility",
-        "finding_template": "Tooth {tooth_number}: mobility noted",
+        "name": "incompletely-endodontically-treated-tooth",
+        "finding_name": "Incompletely Endodontically Treated Tooth",
+        "description_template": "Coronally- a well-defined radiopacity noted along with partial loss of crown structure; Radicularly - homogenous thin linear radiopacity noted involving the root canal s/o endodontic restorative material periapically - no changes appreciated.",
+        "active": 1
+    },
+    {
+        "doctype": "OPG Tooth Finding",
+        "name": "restoration",
+        "finding_name": "Restoration",
+        "description_template": "Coronally- a well-defined radiopacity involving enamel noted;s/o restorative material Radicularly-no changes appreciated Periapically- no changes appreciated",
+        "active": 1
+    },
+    {
+        "doctype": "OPG Tooth Finding",
+        "name": "prosthetic-crown",
+        "finding_name": "Prosthetic Crown",
+        "description_template": "Coronally- a well-defined radiopacity noted;s/o prosthetic crown Radicularly-no changes appreciated Periapically- no changes appreciated",
+        "active": 1
+    },
+    {
+        "doctype": "OPG Tooth Finding",
+        "name": "incompletely-endodontically-treated-tooth-with-rarefying-osteitis",
+        "finding_name": "Incompletely Endodontically Treated Tooth With Rarefying Osteitis",
+        "description_template": "Coronally- a well-defined radiopacity noted along with partial loss of crown structure; Radicularly - homogenous thin linear radiopacity which is 3-4mm short of apex involving the root canal s/o endodontic restorative material periapically - ill defined hazy radiolucency with loss of lamina dura noted",
+        "active": 1
+    },
+    {
+        "doctype": "OPG Tooth Finding",
+        "name": "mesioangular-impaction",
+        "finding_name": "Mesioangular Impaction",
+        "description_template": "A dense radiopaque structure with density and morphology similar to that of a tooth with it's long axis is mesially inclined to that of adjacent tooth,The mesial portion crown is at the level of cervical third of adjacent tooth.The root formation is incomplete.The apical third of roots are in close approximation to inferior alveolar nerve canal suggestive of mesioangular impaction.",
+        "active": 1
+    },
+    {
+        "doctype": "OPG Tooth Finding",
+        "name": "distoangular-impaction",
+        "finding_name": "Distoangular Impaction",
+        "description_template": "A dense radiopaque structure with density and morphology similar to that of a tooth noted ,the crown at the level of cervical third with it's long axis distally oriented to that of adjacent tooth, root formation is incomplete ,suggestive of distoangular impaction.",
+        "active": 1
+    },
+    {
+        "doctype": "OPG Tooth Finding",
+        "name": "horizontal-impaction",
+        "finding_name": "Horizontal Impaction",
+        "description_template": "A dense radiopaque structure with density and morphology similar to that of tooth a with it's long axis is perpendicular to that of adjacent tooth,The tooth is embedded inside the bone except the distal cusp which is at the level of occlusal third of adjacent tooth.The root formation is incomplete.The follicular space is increased .The tooth in close approximation to inferior alveolar nerve canal suggestive of horizontal impaction.",
+        "active": 1
+    },
+    {
+        "doctype": "OPG Tooth Finding",
+        "name": "vertical-impaction",
+        "finding_name": "Vertical Impaction",
+        "description_template": "A dense radiopaque structure with density and morphology similar to that of a tooth with it's long axis parallel to that of adjacent tooth noted.The crown is embedded inside the bone and is at the level of cervical third of adjacent tooth.The root formation is complete .The follicular space is increased .The apical third of roots are in close approximation to inferior alveolar nerve canal suggestive of vertical impaction.",
+        "active": 1
+    },
+    {
+        "doctype": "OPG Tooth Finding",
+        "name": "partially-edentulous",
+        "finding_name": "Partially Edentulous",
+        "description_template": "Partial complement set of permanent dentition noted, with missing wrt",
+        "active": 1
+    },
+    {
+        "doctype": "OPG Tooth Finding",
+        "name": "periodontitis",
+        "finding_name": "Periodontitis",
+        "description_template": "The crest of the alveolar ridge is at the level of middle third of the roots of all the teeth except wrt 41 31 which is at the apical third of the root",
+        "active": 1
+    },
+    {
+        "doctype": "OPG Tooth Finding",
+        "name": "generalised-attrition",
+        "finding_name": "Generalised Attrition",
+        "description_template": "Irt all teeth - coronally - flattening of inscisal edge and cusps involving enamel and dentin noted s/o attrition",
+        "active": 1
+    },
+    {
+        "doctype": "OPG Tooth Finding",
+        "name": "idiopathic-osteosclerosis",
+        "finding_name": "Idiopathic Osteosclerosis",
+        "description_template": "Ill defined hazy radiopacity noted between the apical region of 11 and 12 region s/o idiopathic osteosclerosis.",
+        "active": 1
+    },
+    {
+        "doctype": "OPG Tooth Finding",
+        "name": "soft-tissue-calcification",
+        "finding_name": "Soft Tissue Calcification",
+        "description_template": "Wrt laryngeal cartilage region below the level of hyoid bone a discrete radiopacity and a linear radiopacity noted s/o soft tissue calcification.",
         "active": 1
     }
 ]
