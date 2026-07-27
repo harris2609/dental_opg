@@ -29,7 +29,7 @@ def get_reporting_setup_data():
 	tooth_findings = frappe.get_all(
 		"OPG Tooth Finding",
 		filters={"active": 1},
-		fields=["name", "finding_name"],
+		fields=["name", "finding_name", "description_template"],
 		order_by="finding_name asc",
 	)
 

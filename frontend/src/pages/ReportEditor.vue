@@ -80,9 +80,13 @@
 
 				<IncidentalFindingsCard :report-name="report.name" />
 
-				<div v-if="report.generated_report_text" class="rounded border bg-white p-4">
+				<div v-if="report.generated_report_text !== undefined" class="rounded border bg-white p-4">
 					<h2 class="mb-2 text-sm font-semibold text-gray-800">Generated Report Text</h2>
-					<pre class="whitespace-pre-wrap text-xs text-gray-700">{{ report.generated_report_text }}</pre>
+					<textarea
+						v-model="report.generated_report_text"
+						rows="14"
+						class="w-full rounded border px-2 py-1 font-mono text-xs text-gray-700"
+					></textarea>
 				</div>
 			</div>
 		</div>
@@ -159,6 +163,7 @@ async function save() {
 			status: report.status,
 			reported_by: report.reported_by,
 			verified_by: report.verified_by,
+			generated_report_text: report.generated_report_text,
 		})
 		await saveFindings(report.name, sectionFindings.value, toothFindings.value)
 		await saveAnnotations(report.name, annotations.value)
