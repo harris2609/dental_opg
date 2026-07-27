@@ -62,31 +62,43 @@ def _section_finding_lines(report):
 
 
 def _tooth_finding_lines(report):
-	tooth_finding_names = {row.finding for row in report.tooth_findings if row.finding}
-	templates = {}
-	if tooth_finding_names:
-		templates = {
-			row.name: row.finding_template
-			for row in frappe.get_all(
-				"OPG Tooth Finding",
-				filters={"name": ["in", list(tooth_finding_names)]},
-				fields=["name", "finding_template"],
-			)
-		}
+	"""One line per distinct (arch section, finding_name, description) group,
+	tooth numbers merged in first-seen order - so selecting the same finding
+	with the same (possibly edited) description on multiple teeth produces one
+	combined "irt 16, 17 - ..." line instead of a separate line per tooth. If
+	a dentist edits one tooth's description independently afterward, that
+	entry naturally falls out of the group (its text no longer matches) and
+	prints as its own line - no explicit "linked group" state to maintain."""
+	groups = {}
+	order = []
+	for row in report.tooth_findings:
+		section = ARCH_TO_SECTION.get(row.arch)
+		if not section:
+			continue
+		key = (section, row.finding_name, row.description)
+		if key not in groups:
+			groups[key] = []
+			order.append(key)
+		groups[key].append(row.tooth_number)
 
 	lines_by_arch_section = {"Maxillary Arch": [], "Mandibular Arch": []}
-	for row in report.tooth_findings:
-		if row.is_custom or not row.finding:
-			text = (row.custom_text or "").strip()
-			if text:
-				text = f"Tooth {row.tooth_number}: {text}"
-		else:
-			template = templates.get(row.finding, "")
-			text = _render_template(template, tooth_number=row.tooth_number or "")
-		section = ARCH_TO_SECTION.get(row.arch)
-		if text and section:
-			lines_by_arch_section[section].append(text)
+	for key in order:
+		section, finding_name, description = key
+		if not (finding_name and description):
+			continue
+		tooth_numbers = ", ".join(groups[key])
+		lines_by_arch_section[section].append(f"irt {tooth_numbers} - {description}")
 	return lines_by_arch_section
+
+
+def _distinct_tooth_finding_names(report):
+	"""Deduplicated finding names across all tooth findings (both arches),
+	first-seen order, for the Radiologic Impression summary."""
+	seen = []
+	for row in report.tooth_findings:
+		if row.finding_name and row.finding_name not in seen:
+			seen.append(row.finding_name)
+	return seen
 
 
 def build_report_sections(report):
@@ -97,6 +109,9 @@ def build_report_sections(report):
 	tooth_lines = _tooth_finding_lines(report)
 	for section, extra_lines in tooth_lines.items():
 		section_lines[section].extend(extra_lines)
+
+	for finding_name in _distinct_tooth_finding_names(report):
+		section_lines["Radiologic Impression"].append(finding_name)
 
 	sections = []
 	for section in SECTION_ORDER:
