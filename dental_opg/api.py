@@ -75,6 +75,13 @@ def create_report(
 def export_incidental_findings_xlsx():
 	from frappe.utils.xlsxutils import make_xlsx
 
+	# OPG Incidental Finding permissions are System-Manager-only (see its
+	# DocType json) - frappe.get_all bypasses permission checks entirely, so
+	# this gate is what actually enforces that restriction for this endpoint,
+	# same as export_report_docx/get_annotated_report_image gate on
+	# report.check_permission("read") below.
+	frappe.only_for("System Manager")
+
 	fields = ["report", "patient", "finding_type", "side", "severity", "finding_date", "reported_by"]
 	headers = ["Report", "Patient", "Finding Type", "Side", "Severity", "Finding Date", "Reported By"]
 
