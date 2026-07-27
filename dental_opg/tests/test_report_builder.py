@@ -33,12 +33,13 @@ class TestReportBuilderToothFindings(IntegrationTestCase):
 		self.assertIn("irt 16, 17 - desc A", maxillary["lines"])
 		self.assertIn("irt 26 - desc B edited", maxillary["lines"])
 
-	def test_radiologic_impression_lists_distinct_tooth_finding_names(self):
+	def test_radiologic_impression_includes_tooth_numbers_and_splits_by_description(self):
 		self.report.save_findings(
 			section_findings=[],
 			tooth_findings=[
 				{"tooth_number": "16", "arch": "Maxillary", "finding_name": "Dental Caries", "description": "desc A"},
-				{"tooth_number": "26", "arch": "Maxillary", "finding_name": "Dental Caries", "description": "desc B"},
+				{"tooth_number": "17", "arch": "Maxillary", "finding_name": "Dental Caries", "description": "desc A"},
+				{"tooth_number": "26", "arch": "Maxillary", "finding_name": "Dental Caries", "description": "desc B edited"},
 				{"tooth_number": "46", "arch": "Mandibular", "finding_name": "Root Stumps", "description": "desc C"},
 			],
 		)
@@ -47,5 +48,21 @@ class TestReportBuilderToothFindings(IntegrationTestCase):
 		sections = build_report_sections(self.report)
 		impression = next(s for s in sections if s["name"] == "RADIOLOGIC IMPRESSION")
 
-		self.assertEqual(impression["lines"].count("Dental Caries"), 1)
-		self.assertIn("Root Stumps", impression["lines"])
+		self.assertIn("Dental Caries irt 16, 17", impression["lines"])
+		self.assertIn("Dental Caries irt 26", impression["lines"])
+		self.assertIn("Root Stumps irt 46", impression["lines"])
+
+	def test_radiologic_impression_merges_identical_finding_and_description_across_arches(self):
+		self.report.save_findings(
+			section_findings=[],
+			tooth_findings=[
+				{"tooth_number": "16", "arch": "Maxillary", "finding_name": "Dental Caries", "description": "same text"},
+				{"tooth_number": "46", "arch": "Mandibular", "finding_name": "Dental Caries", "description": "same text"},
+			],
+		)
+		self.report.reload()
+
+		sections = build_report_sections(self.report)
+		impression = next(s for s in sections if s["name"] == "RADIOLOGIC IMPRESSION")
+
+		self.assertEqual(impression["lines"].count("Dental Caries irt 16, 46"), 1)

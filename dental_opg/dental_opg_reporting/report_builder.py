@@ -91,14 +91,31 @@ def _tooth_finding_lines(report):
 	return lines_by_arch_section
 
 
-def _distinct_tooth_finding_names(report):
-	"""Deduplicated finding names across all tooth findings (both arches),
-	first-seen order, for the Radiologic Impression summary."""
-	seen = []
+def _impression_finding_lines(report):
+	"""One "{finding_name} irt {tooth_numbers}" line per distinct (finding_name,
+	description) pair, tooth numbers merged in first-seen order - across BOTH
+	arches combined, since Radiologic Impression is one unified section with
+	no arch boundary (unlike _tooth_finding_lines, which keeps the two arch
+	sections separate). Two teeth sharing an identical finding name but a
+	genuinely different (edited) description produce two separate lines,
+	mirroring how the arch section itself already treats them."""
+	groups = {}
+	order = []
 	for row in report.tooth_findings:
-		if row.finding_name and row.finding_name not in seen:
-			seen.append(row.finding_name)
-	return seen
+		if not (row.finding_name and row.description):
+			continue
+		key = (row.finding_name, row.description)
+		if key not in groups:
+			groups[key] = []
+			order.append(key)
+		groups[key].append(row.tooth_number)
+
+	lines = []
+	for key in order:
+		finding_name, _ = key
+		tooth_numbers = ", ".join(groups[key])
+		lines.append(f"{finding_name} irt {tooth_numbers}")
+	return lines
 
 
 def build_report_sections(report):
@@ -110,8 +127,7 @@ def build_report_sections(report):
 	for section, extra_lines in tooth_lines.items():
 		section_lines[section].extend(extra_lines)
 
-	for finding_name in _distinct_tooth_finding_names(report):
-		section_lines["Radiologic Impression"].append(finding_name)
+	section_lines["Radiologic Impression"].extend(_impression_finding_lines(report))
 
 	sections = []
 	for section in SECTION_ORDER:
