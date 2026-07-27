@@ -87,28 +87,28 @@
         "doctype": "OPG Tooth Finding",
         "name": "mesioangular-impaction",
         "finding_name": "Mesioangular Impaction",
-        "description_template": "A dense radiopaque structure with density and morphology similar to that of a tooth with it's long axis is mesially inclined to that of adjacent tooth,The mesial portion crown is at the level of cervical third of adjacent tooth.The root formation is incomplete.The apical third of roots are in close approximation to inferior alveolar nerve canal suggestive of mesioangular impaction.",
+        "description_template": "A dense radiopaque structure with density and morphology similar to that of a tooth with it’s long axis is mesially inclined to that of adjacent tooth,The mesial portion crown is at the level of cervical third of adjacent tooth.The root formation is incomplete.The apical third of roots are in close approximation to inferior alveolar nerve canal suggestive of mesioangular impaction.",
         "active": 1
     },
     {
         "doctype": "OPG Tooth Finding",
         "name": "distoangular-impaction",
         "finding_name": "Distoangular Impaction",
-        "description_template": "A dense radiopaque structure with density and morphology similar to that of a tooth noted ,the crown at the level of cervical third with it's long axis distally oriented to that of adjacent tooth, root formation is incomplete ,suggestive of distoangular impaction.",
+        "description_template": "A dense radiopaque structure with density and morphology similar to that of a tooth noted ,the crown at the level of cervical third with it’s long axis distally oriented to that of adjacent tooth, root formation is incomplete ,suggestive of distoangular impaction.",
         "active": 1
     },
     {
         "doctype": "OPG Tooth Finding",
         "name": "horizontal-impaction",
         "finding_name": "Horizontal Impaction",
-        "description_template": "A dense radiopaque structure with density and morphology similar to that of tooth a with it's long axis is perpendicular to that of adjacent tooth,The tooth is embedded inside the bone except the distal cusp which is at the level of occlusal third of adjacent tooth.The root formation is incomplete.The follicular space is increased .The tooth in close approximation to inferior alveolar nerve canal suggestive of horizontal impaction.",
+        "description_template": "A dense radiopaque structure with density and morphology similar to that of tooth a with it’s long axis is perpendicular to that of adjacent tooth,The tooth is embedded inside the bone except the distal cusp which is at the level of occlusal third of adjacent tooth.The root formation is incomplete.The follicular space is increased .The tooth in close approximation to inferior alveolar nerve canal suggestive of horizontal impaction.",
         "active": 1
     },
     {
         "doctype": "OPG Tooth Finding",
         "name": "vertical-impaction",
         "finding_name": "Vertical Impaction",
-        "description_template": "A dense radiopaque structure with density and morphology similar to that of a tooth with it's long axis parallel to that of adjacent tooth noted.The crown is embedded inside the bone and is at the level of cervical third of adjacent tooth.The root formation is complete .The follicular space is increased .The apical third of roots are in close approximation to inferior alveolar nerve canal suggestive of vertical impaction.",
+        "description_template": "A dense radiopaque structure with density and morphology similar to that of a tooth with it’s long axis parallel to that of adjacent tooth noted.The crown is embedded inside the bone and is at the level of cervical third of adjacent tooth.The root formation is complete .The follicular space is increased .The apical third of roots are in close approximation to inferior alveolar nerve canal suggestive of vertical impaction.",
         "active": 1
     },
     {
