@@ -82,7 +82,14 @@ def get_annotated_report_image(name: str):
 	if content is None:
 		frappe.throw(frappe._("Report {0} has no OPG image").format(name), frappe.DoesNotExistError)
 
+	# type="binary" (as_binary) hardcodes application/octet-stream and
+	# ignores content_type entirely - type="download" (as_raw) is what
+	# actually honors it, same as export_report_docx above. Matters here
+	# because wkhtmltopdf (used for the PDF print format, this endpoint's
+	# primary consumer) is far less forgiving about content-type sniffing
+	# than a modern browser.
 	frappe.local.response.filename = f"{report.name}.jpg"
 	frappe.local.response.filecontent = content
 	frappe.local.response.content_type = "image/jpeg"
-	frappe.local.response.type = "binary"
+	frappe.local.response.display_content_as = "inline"
+	frappe.local.response.type = "download"
