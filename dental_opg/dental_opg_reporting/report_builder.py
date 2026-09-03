@@ -1,3 +1,5 @@
+import re
+
 import frappe
 
 SECTION_ORDER = [
@@ -22,25 +24,29 @@ SIDE_PHRASES = {
 }
 
 
-class _SafeDict(dict):
-	def __missing__(self, key):
-		return ""
+# Finding templates only ever use these three placeholders. Substitute them
+# explicitly rather than via str.format_map, which raises ValueError on any
+# stray "{"/"}" or positional field - and templates can contain arbitrary
+# dentist-typed text (custom findings are promoted verbatim into a template),
+# so a single "{" must not be allowed to abort the whole report.
+_PLACEHOLDER = re.compile(r"\{(side|tooth_number|level)\}")
 
 
 def _render_template(template, **kwargs):
-	return " ".join(template.format_map(_SafeDict(**kwargs)).split())
+	rendered = _PLACEHOLDER.sub(lambda m: str(kwargs.get(m.group(1), "")), template or "")
+	return " ".join(rendered.split())
 
 
 def _section_finding_lines(report):
 	standard_finding_names = {row.finding for row in report.section_findings if row.finding}
-	templates = {}
+	masters = {}
 	if standard_finding_names:
-		templates = {
-			row.name: row.finding_template
+		masters = {
+			row.name: row
 			for row in frappe.get_all(
 				"OPG Standard Finding",
 				filters={"name": ["in", list(standard_finding_names)]},
-				fields=["name", "finding_template"],
+				fields=["name", "finding_template", "finding_label"],
 			)
 		}
 
@@ -49,13 +55,17 @@ def _section_finding_lines(report):
 		if row.is_custom or not row.finding:
 			text = (row.custom_text or "").strip()
 		else:
-			template = templates.get(row.finding, "")
+			master = masters.get(row.finding)
 			text = _render_template(
-				template,
+				(master and master.finding_template) or "",
 				side=SIDE_PHRASES.get(row.side, row.side or ""),
 				tooth_number=row.tooth_number or "",
 				level=(row.level or "").lower(),
 			)
+			# A finding the dentist explicitly selected must never silently
+			# vanish - fall back to its label if the template rendered empty.
+			if not text and master:
+				text = (master.finding_label or "").strip()
 		if text and row.section in lines_by_section:
 			lines_by_section[row.section].append(text)
 	return lines_by_section
@@ -139,5 +149,7 @@ def build_report_sections(report):
 
 def build_report_text(report):
 	"""Assemble deterministic, template-based narrative text from structured findings on an OPG Report doc."""
-	blocks = [f"{section['name']}:\n" + "\n".join(section["lines"]) for section in build_report_sections(report)]
+	blocks = [
+		f"{section['name']}:\n" + "\n".join(section["lines"]) for section in build_report_sections(report)
+	]
 	return "\n\n".join(blocks)

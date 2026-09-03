@@ -4,11 +4,25 @@ from frappe.model.document import Document
 from dental_opg.dental_opg_reporting.report_builder import build_report_text
 
 
+def _clear_missing_links(rows, master_doctype):
+	"""Null every `finding` on `rows` that does not resolve to an existing
+	`master_doctype` record. Shared by the save path and the data patch."""
+	names = {row.finding for row in rows if row.finding}
+	if not names:
+		return
+	live = set(frappe.get_all(master_doctype, filters={"name": ["in", list(names)]}, pluck="name"))
+	for row in rows:
+		if row.finding and row.finding not in live:
+			row.finding = None
+
+
 class OPGReport(Document):
 	def validate(self):
 		for row in self.tooth_findings:
 			if not row.arch:
-				row.arch = "Maxillary" if row.tooth_number and row.tooth_number.strip()[:1] in "12" else "Mandibular"
+				row.arch = (
+					"Maxillary" if row.tooth_number and row.tooth_number.strip()[:1] in "12" else "Mandibular"
+				)
 
 	@frappe.whitelist(methods=["POST"])
 	def save_findings(self, section_findings: list | None = None, tooth_findings: list | None = None):
@@ -16,9 +30,26 @@ class OPGReport(Document):
 			self.set("section_findings", section_findings)
 		if tooth_findings is not None:
 			self.set("tooth_findings", tooth_findings)
+		self._drop_missing_finding_links()
 		self._promote_custom_findings_to_master_lists()
 		self.save()
 		return {"name": self.name}
+
+	def _drop_missing_finding_links(self):
+		"""Clear any `finding` link pointing at a master that no longer exists,
+		and discard tooth rows left with nothing usable.
+
+		A deleted master would otherwise make `_validate_links` reject every
+		save of the whole report. A row that keeps its finding_name/description
+		snapshot survives (that snapshot is what generation reads); a tooth row
+		with neither a live link nor a snapshot is not a finding at all and is
+		dropped rather than left to fail mandatory-field validation."""
+		_clear_missing_links(self.section_findings, "OPG Standard Finding")
+		_clear_missing_links(self.tooth_findings, "OPG Tooth Finding")
+
+		usable = [row for row in self.tooth_findings if row.finding or (row.finding_name and row.description)]
+		if len(usable) != len(self.tooth_findings):
+			self.set("tooth_findings", usable)
 
 	def _promote_custom_findings_to_master_lists(self):
 		"""Any custom finding a dentist typed into an 'add custom' box becomes a

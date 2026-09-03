@@ -54,14 +54,21 @@ class TestOPGReport(IntegrationTestCase):
 	def test_save_findings_promotes_new_custom_section_finding_to_reusable_master(self):
 		self.report.save_findings(
 			section_findings=[
-				{"section": "Styloid Process", "is_custom": 1, "custom_text": "Unusual elongation noted bilaterally"},
+				{
+					"section": "Styloid Process",
+					"is_custom": 1,
+					"custom_text": "Unusual elongation noted bilaterally",
+				},
 			],
 			tooth_findings=[],
 		)
 
 		matches = frappe.get_all(
 			"OPG Standard Finding",
-			filters={"section_name": "Styloid Process", "finding_label": "Unusual elongation noted bilaterally"},
+			filters={
+				"section_name": "Styloid Process",
+				"finding_label": "Unusual elongation noted bilaterally",
+			},
 			fields=["name", "finding_template", "allow_side", "allow_tooth", "allow_level", "active"],
 		)
 		self.assertEqual(len(matches), 1)
@@ -115,11 +122,69 @@ class TestOPGReport(IntegrationTestCase):
 
 		matches = frappe.get_all(
 			"OPG Tooth Finding",
-			filters={"finding_name": "Unusual radiopacity", "description_template": "A distinct radiopaque focus noted near the apex"},
+			filters={
+				"finding_name": "Unusual radiopacity",
+				"description_template": "A distinct radiopaque focus noted near the apex",
+			},
 			fields=["name", "active"],
 		)
 		self.assertEqual(len(matches), 1)
 		self.assertEqual(matches[0].active, 1)
+
+	def test_save_findings_clears_tooth_finding_link_to_missing_master(self):
+		"""A tooth finding whose `finding` master was deleted must not make the
+		whole report unsaveable - drop the stale link, keep the row and its
+		finding_name/description snapshot."""
+		self.report.save_findings(
+			section_findings=[],
+			tooth_findings=[
+				{
+					"tooth_number": "36",
+					"arch": "Mandibular",
+					"finding": "master-that-was-deleted",
+					"finding_name": "Mobility",
+					"description": "Grade II mobility noted",
+				},
+			],
+		)
+		self.report.reload()
+
+		self.assertEqual(len(self.report.tooth_findings), 1)
+		self.assertFalse(self.report.tooth_findings[0].finding)
+		self.assertEqual(self.report.tooth_findings[0].finding_name, "Mobility")
+
+	def test_save_findings_drops_tooth_row_with_dead_link_and_no_snapshot(self):
+		"""A tooth row with a dangling `finding` and no finding_name/description
+		snapshot is not a finding - drop it instead of failing the whole save
+		on mandatory fields."""
+		self.report.save_findings(
+			section_findings=[],
+			tooth_findings=[
+				{"tooth_number": "36", "arch": "Mandibular", "finding": "slug-from-old-schema"},
+				{
+					"tooth_number": "16",
+					"arch": "Maxillary",
+					"finding_name": "Dental Caries",
+					"description": "keep me",
+				},
+			],
+		)
+		self.report.reload()
+
+		self.assertEqual(len(self.report.tooth_findings), 1)
+		self.assertEqual(self.report.tooth_findings[0].tooth_number, "16")
+
+	def test_save_findings_clears_section_finding_link_to_missing_master(self):
+		self.report.save_findings(
+			section_findings=[
+				{"section": "Styloid Process", "finding": "master-that-was-deleted", "is_custom": 0},
+			],
+			tooth_findings=[],
+		)
+		self.report.reload()
+
+		self.assertEqual(len(self.report.section_findings), 1)
+		self.assertFalse(self.report.section_findings[0].finding)
 
 	def test_save_findings_does_not_promote_tooth_finding_picked_from_master_list(self):
 		existing = frappe.get_doc(

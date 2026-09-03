@@ -6,13 +6,14 @@
 			<h1 class="text-sm font-semibold">{{ report.name }}</h1>
 			<span class="rounded bg-yellow-100 px-2 py-0.5 text-xs text-yellow-700">{{ report.status }}</span>
 			<div class="ml-auto flex gap-2">
-				<button class="actionbtn" :disabled="saving" @click="save">{{ saving ? 'Saving...' : 'Save Findings' }}</button>
+				<button class="actionbtn" :disabled="saving" @click="onSave">{{ saving ? 'Saving...' : 'Save Findings' }}</button>
 				<button class="actionbtn" :disabled="generating" @click="onGenerate">
 					{{ generating ? 'Generating...' : 'Generate Report' }}
 				</button>
 				<a class="actionbtn inline-block" :href="printUrl" target="_blank">Print</a>
 				<a class="actionbtn inline-block" :href="docxExportUrl">Export DOCX</a>
 			</div>
+			<p v-if="actionError" class="w-full text-xs text-red-600">{{ actionError }}</p>
 		</div>
 
 		<div class="grid flex-1 gap-4 overflow-hidden p-4 md:grid-cols-2">
@@ -114,6 +115,7 @@ const props = defineProps({ reportId: { type: String, required: true } })
 const loading = ref(true)
 const saving = ref(false)
 const generating = ref(false)
+const actionError = ref('')
 const report = reactive({})
 const setup = reactive({ section_order: [], standard_findings_by_section: {}, tooth_findings: [] })
 const sectionFindings = ref([])
@@ -153,6 +155,10 @@ function updateToothFindings(arch, rows) {
 	toothFindings.value = [...toothFindings.value.filter((r) => r.arch !== arch), ...rows]
 }
 
+function errorText(e) {
+	return e?.messages?.filter(Boolean).join(' ') || e?.message || 'Something went wrong'
+}
+
 async function save() {
 	saving.value = true
 	try {
@@ -172,11 +178,23 @@ async function save() {
 	}
 }
 
+async function onSave() {
+	actionError.value = ''
+	try {
+		await save()
+	} catch (e) {
+		actionError.value = `Save failed: ${errorText(e)}`
+	}
+}
+
 async function onGenerate() {
 	generating.value = true
+	actionError.value = ''
 	try {
 		await save()
 		report.generated_report_text = await generateReport(report.name)
+	} catch (e) {
+		actionError.value = `Report generation failed: ${errorText(e)}`
 	} finally {
 		generating.value = false
 	}
