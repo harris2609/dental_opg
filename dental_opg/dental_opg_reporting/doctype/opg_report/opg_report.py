@@ -16,13 +16,19 @@ def _clear_missing_links(rows, master_doctype):
 			row.finding = None
 
 
+# FDI quadrants: 1, 2 permanent upper; 5, 6 deciduous upper.
+MAXILLARY_QUADRANTS = ("1", "2", "5", "6")
+
+
 class OPGReport(Document):
 	def validate(self):
+		# The tooth number is the source of truth for the arch. `arch` is a
+		# Select with no blank option, so it always arrives pre-filled with
+		# "Maxillary" - an "only if empty" check would never fire.
 		for row in self.tooth_findings:
-			if not row.arch:
-				row.arch = (
-					"Maxillary" if row.tooth_number and row.tooth_number.strip()[:1] in "12" else "Mandibular"
-				)
+			quadrant = (row.tooth_number or "").strip()[:1]
+			if quadrant:
+				row.arch = "Maxillary" if quadrant in MAXILLARY_QUADRANTS else "Mandibular"
 
 	@frappe.whitelist(methods=["POST"])
 	def save_findings(self, section_findings: list | None = None, tooth_findings: list | None = None):

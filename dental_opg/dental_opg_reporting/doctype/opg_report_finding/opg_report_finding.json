@@ -34,6 +34,12 @@
             "in_list_view": 1
         },
         {
+            "fieldname": "edited_text",
+            "fieldtype": "Small Text",
+            "label": "Edited Text",
+            "description": "Per-patient override of the rendered finding text"
+        },
+        {
             "fieldname": "side",
             "fieldtype": "Select",
             "label": "Side",
@@ -50,5 +56,6 @@
             "label": "Level",
             "options": "\nCervical Third\nMiddle Third\nApical Third"
         }
-    ]
+    ],
+    "modified": "2026-10-13 12:00:00.000000"
 }

@@ -211,3 +211,37 @@ class TestOPGReport(IntegrationTestCase):
 			filters={"finding_name": "Already A Master Finding"},
 		)
 		self.assertEqual(len(matches), 1)
+
+	def test_validate_assigns_arch_for_deciduous_teeth(self):
+		self.report.save_findings(
+			section_findings=[],
+			tooth_findings=[
+				{"tooth_number": tooth, "finding_name": "Test", "description": "Test"}
+				for tooth in ("55", "65", "75", "85")
+			],
+		)
+		self.report.reload()
+		arch_by_tooth = {row.tooth_number: row.arch for row in self.report.tooth_findings}
+		self.assertEqual(
+			arch_by_tooth,
+			{"55": "Maxillary", "65": "Maxillary", "75": "Mandibular", "85": "Mandibular"},
+		)
+
+	def test_tooth_finding_name_longer_than_140_characters_saves(self):
+		long_name = "Custom finding " + "x" * 300
+		self.report.save_findings(
+			section_findings=[],
+			tooth_findings=[{"tooth_number": "16", "finding_name": long_name, "description": long_name}],
+		)
+		self.report.reload()
+		self.assertEqual(self.report.tooth_findings[0].finding_name, long_name)
+
+	def test_section_finding_edited_text_is_saved(self):
+		self.report.save_findings(
+			section_findings=[
+				{"section": "Condylar Morphology", "finding": "csf-normal", "edited_text": "Edited for patient"}
+			],
+			tooth_findings=[],
+		)
+		self.report.reload()
+		self.assertEqual(self.report.section_findings[0].edited_text, "Edited for patient")
