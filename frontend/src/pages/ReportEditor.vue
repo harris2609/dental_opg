@@ -4,6 +4,9 @@
 		<div class="flex flex-wrap items-center gap-3 border-b bg-white px-4 py-2">
 			<router-link to="/dental_opg" class="text-sm text-gray-500 hover:underline">&larr; Reports</router-link>
 			<h1 class="text-sm font-semibold">{{ report.name }}</h1>
+			<span v-if="patient.patient_name" class="text-sm text-gray-700">
+				{{ patient.patient_name }}<template v-if="patient.age"> · {{ patient.age }} yrs</template><template v-if="patient.sex"> · {{ patient.sex }}</template>
+			</span>
 			<span class="rounded bg-yellow-100 px-2 py-0.5 text-xs text-yellow-700">{{ report.status }}</span>
 			<div class="ml-auto flex gap-2">
 				<button class="actionbtn" :disabled="saving" @click="onSave">{{ saving ? 'Saving...' : 'Save Findings' }}</button>
@@ -26,8 +29,16 @@
 					<h2 class="mb-2 text-sm font-semibold text-gray-800">Report Details</h2>
 					<div class="grid grid-cols-2 gap-3 text-xs">
 						<div>
-							<label class="mb-1 block font-medium">Patient</label>
-							<div class="rounded border bg-gray-50 px-2 py-1">{{ report.patient }}</div>
+							<label class="mb-1 block font-medium">Patient Name</label>
+							<div class="rounded border bg-gray-50 px-2 py-1">{{ patient.patient_name || report.patient }}</div>
+						</div>
+						<div>
+							<label class="mb-1 block font-medium">Age / Sex</label>
+							<div class="rounded border bg-gray-50 px-2 py-1">{{ patient.age || '-' }} / {{ patient.sex || '-' }}</div>
+						</div>
+						<div>
+							<label class="mb-1 block font-medium">Registration No</label>
+							<div class="rounded border bg-gray-50 px-2 py-1">{{ patient.registration_no || '-' }}</div>
 						</div>
 						<div>
 							<label class="mb-1 block font-medium">Report Date</label>
@@ -50,11 +61,17 @@
 						</div>
 						<div>
 							<label class="mb-1 block font-medium">Reported By</label>
-							<input v-model="report.reported_by" class="w-full rounded border px-2 py-1" />
+							<input v-model="report.reported_by" list="reported-by-options" class="w-full rounded border px-2 py-1" />
+							<datalist id="reported-by-options">
+								<option v-for="n in signatories.reported_by" :key="n" :value="n" />
+							</datalist>
 						</div>
 						<div>
 							<label class="mb-1 block font-medium">Verified By</label>
-							<input v-model="report.verified_by" class="w-full rounded border px-2 py-1" />
+							<input v-model="report.verified_by" list="verified-by-options" class="w-full rounded border px-2 py-1" />
+							<datalist id="verified-by-options">
+								<option v-for="n in signatories.verified_by" :key="n" :value="n" />
+							</datalist>
 						</div>
 					</div>
 				</div>
@@ -86,7 +103,7 @@
 					<textarea
 						v-model="report.generated_report_text"
 						rows="14"
-						class="w-full rounded border px-2 py-1 font-mono text-xs text-gray-700"
+						class="w-full rounded border px-2 py-1 text-sm text-gray-700"
 					></textarea>
 				</div>
 			</div>
@@ -108,6 +125,8 @@ import {
 	saveAnnotations,
 	generateReport,
 	uploadImage,
+	getPatient,
+	getSignatorySuggestions,
 } from '../api'
 
 const props = defineProps({ reportId: { type: String, required: true } })
@@ -121,6 +140,8 @@ const setup = reactive({ section_order: [], standard_findings_by_section: {}, to
 const sectionFindings = ref([])
 const toothFindings = ref([])
 const annotations = ref([])
+const patient = reactive({})
+const signatories = reactive({ reported_by: [], verified_by: [] })
 
 const imageSrc = computed(() => report.opg_image || '')
 const printUrl = computed(
@@ -139,6 +160,9 @@ onMounted(async () => {
 	toothFindings.value = reportData.tooth_findings || []
 	annotations.value = reportData.annotations || []
 	loading.value = false
+	// Header extras must not block the editor if they fail.
+	if (reportData.patient) getPatient(reportData.patient).then((p) => Object.assign(patient, p)).catch(() => {})
+	getSignatorySuggestions().then((s) => Object.assign(signatories, s)).catch(() => {})
 })
 
 function rowsForSection(section) {
