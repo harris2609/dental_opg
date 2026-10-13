@@ -6,7 +6,9 @@ import frappe
 from docx import Document
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
-from docx.shared import Inches
+from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT, WD_TABLE_ALIGNMENT
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.shared import Inches, Pt, RGBColor
 from docx.text.paragraph import Paragraph
 
 from dental_opg.dental_opg_reporting.image_utils import get_annotated_image_bytes
@@ -26,6 +28,10 @@ SECTION_HEADINGS = {
 	"RADIOLOGIC_IMPRESSION": "RADIOLOGIC IMPRESSION",
 }
 
+FONT_NAME = "Times New Roman"
+BLACK = RGBColor(0, 0, 0)
+FINDINGS_START = "PANORAMIC RADIOGRAPH SHOWS"
+
 
 def build_docx(report) -> bytes:
 	"""Fill the clinic's docx template with one OPG Report's data, return the
@@ -36,6 +42,10 @@ def build_docx(report) -> bytes:
 	_replace_tokens(doc, _metadata_replacements(report, patient))
 	_insert_image(doc, report)
 	_fill_sections(doc, report)
+	_remove_blank_paragraphs(doc)
+	_space_section_headings(doc)
+	_restyle_footer(doc)
+	_apply_black_times_new_roman(doc)
 
 	buffer = io.BytesIO()
 	doc.save(buffer)
@@ -144,3 +154,58 @@ def _copy_numbering(from_paragraph, to_paragraph):
 		return
 	to_pPr = to_paragraph._p.get_or_add_pPr()
 	to_pPr.append(copy.deepcopy(numPr))
+
+
+def _keeps_layout(paragraph):
+	p = paragraph._p
+	return bool(p.findall(".//" + qn("w:drawing"))) or p.find("./" + qn("w:pPr") + "/" + qn("w:sectPr")) is not None
+
+
+def _remove_blank_paragraphs(doc):
+	"""The template carries hardcoded empty paragraphs between sections, which
+	show up as big gaps in the export. Drop every empty paragraph after the
+	findings heading; spacing comes from _space_section_headings instead."""
+	paragraphs = doc.paragraphs
+	start = next((i for i, p in enumerate(paragraphs) if p.text.strip().startswith(FINDINGS_START)), None)
+	if start is None:
+		return
+	for paragraph in paragraphs[start + 1 :]:
+		if not paragraph.text.strip() and not _keeps_layout(paragraph):
+			paragraph._p.getparent().remove(paragraph._p)
+
+
+def _space_section_headings(doc):
+	headings = set(SECTION_HEADINGS.values())
+	for paragraph in doc.paragraphs:
+		if paragraph.text.strip() in headings:
+			paragraph.paragraph_format.space_before = Pt(6)
+
+
+def _restyle_footer(doc):
+	"""Plain, centered two-column Reported by / Verified by footer: no colored
+	fills (text goes black in _apply_black_times_new_roman)."""
+	for table in doc.sections[0].footer.tables:
+		table.alignment = WD_TABLE_ALIGNMENT.CENTER
+		for row in table.rows:
+			for cell in row.cells:
+				tc_pr = cell._tc.get_or_add_tcPr()
+				for shading in tc_pr.findall(qn("w:shd")):
+					tc_pr.remove(shading)
+				cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
+				for paragraph in cell.paragraphs:
+					paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+
+def _apply_black_times_new_roman(doc):
+	"""Every character outside the letterhead header in black Times New Roman
+	(the clinic saw blue text and mixed fonts). Multi-line finding text needs
+	no special handling: python-docx turns "\\n" into <w:br/> on assignment."""
+	normal = doc.styles["Normal"]
+	normal.font.name = FONT_NAME
+	normal.font.color.rgb = BLACK
+	normal.element.get_or_add_rPr().get_or_add_rFonts().set(qn("w:eastAsia"), FONT_NAME)
+	for paragraph in _iter_all_paragraphs(doc):
+		for run in paragraph.runs:
+			run.font.name = FONT_NAME
+			run.font.color.rgb = BLACK
+			run._r.get_or_add_rPr().get_or_add_rFonts().set(qn("w:eastAsia"), FONT_NAME)

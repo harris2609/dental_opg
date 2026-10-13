@@ -2,6 +2,10 @@ import io
 
 import frappe
 from docx import Document as DocxDocument
+from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.oxml.ns import qn
+from docx.shared import Pt, RGBColor
 from frappe.tests import IntegrationTestCase
 
 from dental_opg.dental_opg_reporting.docx_export import TEMPLATE_PATH, build_docx
@@ -86,3 +90,65 @@ class TestDocxExport(IntegrationTestCase):
 		self.assertIn("Dr. Test Reporter", footer_text)
 		self.assertIn("Dr. Test Verifier", footer_text)
 		self.assertNotIn("{{", footer_text)
+
+	def _export(self, section_findings=None, tooth_findings=None):
+		self.report.save_findings(section_findings=section_findings or [], tooth_findings=tooth_findings or [])
+		self.report.reload()
+		return DocxDocument(io.BytesIO(build_docx(self.report)))
+
+	def _all_runs(self, doc):
+		footer = doc.sections[0].footer
+		paragraphs = list(doc.paragraphs) + list(footer.paragraphs)
+		for table in list(doc.tables) + list(footer.tables):
+			for row in table.rows:
+				for cell in row.cells:
+					paragraphs.extend(cell.paragraphs)
+		return [run for p in paragraphs for run in p.runs if run.text.strip()]
+
+	def test_no_blank_paragraphs_after_findings_start(self):
+		doc = self._export(section_findings=[{"section": "Condylar Morphology", "finding": "csf-normal"}])
+		texts = [p.text for p in doc.paragraphs]
+		start = next(i for i, t in enumerate(texts) if t.strip().startswith("PANORAMIC RADIOGRAPH SHOWS"))
+		blank = [
+			i
+			for i, p in enumerate(doc.paragraphs[start + 1 :], start + 1)
+			if not p.text.strip()
+			and not p._p.findall(".//" + qn("w:drawing"))
+			and p._p.find("./" + qn("w:pPr") + "/" + qn("w:sectPr")) is None
+		]
+		self.assertEqual(blank, [])
+
+	def test_section_headings_get_space_before(self):
+		doc = self._export(section_findings=[{"section": "Condylar Morphology", "finding": "csf-normal"}])
+		heading = next(p for p in doc.paragraphs if p.text.strip() == "CONDYLAR MORPHOLOGY:")
+		self.assertEqual(heading.paragraph_format.space_before, Pt(6))
+
+	def test_every_run_is_black_times_new_roman(self):
+		doc = self._export(
+			section_findings=[{"section": "Condylar Morphology", "finding": "csf-normal"}],
+			tooth_findings=[{"tooth_number": "16", "finding_name": "Caries", "description": "Coronally - a"}],
+		)
+		runs = self._all_runs(doc)
+		self.assertTrue(runs)
+		for run in runs:
+			self.assertEqual(run.font.name, "Times New Roman", run.text)
+			self.assertEqual(run.font.color.rgb, RGBColor(0, 0, 0), run.text)
+
+	def test_multi_line_description_uses_line_breaks(self):
+		doc = self._export(
+			tooth_findings=[
+				{"tooth_number": "16", "finding_name": "Caries", "description": "Coronally - a\nRadicularly - b"}
+			]
+		)
+		line = next(p for p in doc.paragraphs if "irt 16" in p.text)
+		self.assertEqual(line.text, "irt 16 - Coronally - a\nRadicularly - b")
+		self.assertTrue(line._p.findall(".//" + qn("w:br")))
+
+	def test_footer_cells_centered_without_fill(self):
+		doc = self._export()
+		table = doc.sections[0].footer.tables[0]
+		for cell in table.rows[0].cells:
+			self.assertIsNone(cell._tc.get_or_add_tcPr().find(qn("w:shd")))
+			self.assertEqual(cell.vertical_alignment, WD_CELL_VERTICAL_ALIGNMENT.CENTER)
+			for p in cell.paragraphs:
+				self.assertEqual(p.alignment, WD_ALIGN_PARAGRAPH.CENTER)
