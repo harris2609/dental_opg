@@ -2,42 +2,50 @@
 	<div class="rounded border bg-white p-4">
 		<h2 class="mb-2 text-sm font-semibold text-gray-800">{{ section }}</h2>
 
-		<div class="mb-3 flex flex-wrap gap-1.5">
-			<button
-				v-for="sf in standardFindings"
-				:key="sf.name"
-				class="rounded-full border border-gray-300 px-2.5 py-1 text-xs hover:bg-gray-100"
-				@click="addFinding(sf)"
-			>
-				+ {{ sf.finding_label }}
-			</button>
-		</div>
+		<FindingPicker class="mb-3" :items="standardFindings" label-field="finding_label" @pick="addFinding" />
 
 		<div v-if="rows.length" class="space-y-2">
-			<div v-for="(row, idx) in rows" :key="idx" class="flex flex-wrap items-center gap-2 rounded bg-gray-50 p-2 text-xs">
-				<span class="min-w-[10rem] flex-1">
-					{{ row.is_custom ? row.custom_text : labelFor(row.finding) }}
-				</span>
-				<select v-if="!row.is_custom && allowSide(row.finding)" v-model="row.side" class="rounded border px-1 py-0.5" @change="emitUpdate">
-					<option value="">side...</option>
-					<option>Left</option>
-					<option>Right</option>
-					<option>Bilateral</option>
-				</select>
-				<input
-					v-if="!row.is_custom && allowTooth(row.finding)"
-					v-model="row.tooth_number"
-					placeholder="tooth #"
-					class="w-20 rounded border px-1 py-0.5"
-					@input="emitUpdate"
-				/>
-				<select v-if="!row.is_custom && allowLevel(row.finding)" v-model="row.level" class="rounded border px-1 py-0.5" @change="emitUpdate">
-					<option value="">level...</option>
-					<option>Cervical Third</option>
-					<option>Middle Third</option>
-					<option>Apical Third</option>
-				</select>
-				<button class="text-red-600" @click="removeRow(idx)">remove</button>
+			<div v-for="(row, idx) in rows" :key="idx" class="rounded bg-gray-50 p-2 text-xs">
+				<div class="flex flex-wrap items-center gap-2">
+					<span class="min-w-[10rem] flex-1">
+						{{ row.is_custom ? row.custom_text : labelFor(row.finding) }}
+					</span>
+					<select v-if="!row.is_custom && master(row)?.allow_side" v-model="row.side" class="rounded border px-1 py-0.5" @change="emitUpdate">
+						<option value="">side...</option>
+						<option>Left</option>
+						<option>Right</option>
+						<option>Bilateral</option>
+					</select>
+					<input
+						v-if="!row.is_custom && master(row)?.allow_tooth"
+						v-model="row.tooth_number"
+						placeholder="tooth #"
+						class="w-24 rounded border px-1 py-0.5"
+						@input="emitUpdate"
+					/>
+					<select v-if="!row.is_custom && master(row)?.allow_level" v-model="row.level" class="rounded border px-1 py-0.5" @change="emitUpdate">
+						<option value="">level...</option>
+						<option>Cervical Third</option>
+						<option>Middle Third</option>
+						<option>Apical Third</option>
+					</select>
+					<button v-if="!row.is_custom" class="text-gray-700 underline" @click="toggleEdit(row)">
+						{{ editing.has(row) ? 'done' : 'edit' }}
+					</button>
+					<button class="text-red-600" @click="removeRow(idx)">remove</button>
+				</div>
+				<div v-if="!row.is_custom && editing.has(row)" class="mt-2">
+					<textarea
+						v-model="row.edited_text"
+						rows="5"
+						class="w-full resize-y rounded border px-2 py-1 text-sm"
+						@input="emitUpdate"
+					></textarea>
+					<button class="text-gray-600 underline" @click="resetEdit(row)">reset to standard text</button>
+				</div>
+				<p v-else-if="!row.is_custom && row.edited_text" class="mt-1 whitespace-pre-line text-gray-600">
+					{{ row.edited_text }}
+				</p>
 			</div>
 		</div>
 
@@ -50,11 +58,14 @@
 			/>
 			<button class="rounded bg-gray-900 px-2 py-1 text-xs text-white" @click="addCustom">Add</button>
 		</div>
+		<p class="mt-1 text-[11px] text-gray-500">Custom findings are saved to the list for future reports.</p>
 	</div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, reactive } from 'vue'
+import FindingPicker from './FindingPicker.vue'
+import { renderTemplate } from '../findingText'
 
 const props = defineProps({
 	section: { type: String, required: true },
@@ -64,28 +75,39 @@ const props = defineProps({
 const emit = defineEmits(['update:rows'])
 
 const customText = ref('')
+const editing = reactive(new Set())
 
+function master(row) {
+	return props.standardFindings.find((f) => f.name === row.finding)
+}
 function labelFor(findingName) {
 	return props.standardFindings.find((f) => f.name === findingName)?.finding_label || findingName
-}
-function allowSide(findingName) {
-	return !!props.standardFindings.find((f) => f.name === findingName)?.allow_side
-}
-function allowTooth(findingName) {
-	return !!props.standardFindings.find((f) => f.name === findingName)?.allow_tooth
-}
-function allowLevel(findingName) {
-	return !!props.standardFindings.find((f) => f.name === findingName)?.allow_level
 }
 
 function emitUpdate() {
 	emit('update:rows', [...props.rows])
 }
 
+function toggleEdit(row) {
+	if (editing.has(row)) {
+		editing.delete(row)
+		return
+	}
+	if (!row.edited_text) row.edited_text = renderTemplate(master(row)?.finding_template, row) || labelFor(row.finding)
+	editing.add(row)
+	emitUpdate()
+}
+
+function resetEdit(row) {
+	row.edited_text = ''
+	editing.delete(row)
+	emitUpdate()
+}
+
 function addFinding(sf) {
 	emit('update:rows', [
 		...props.rows,
-		{ section: props.section, finding: sf.name, is_custom: 0, side: '', tooth_number: '', level: '' },
+		{ section: props.section, finding: sf.name, is_custom: 0, side: '', tooth_number: '', level: '', edited_text: '' },
 	])
 }
 
@@ -97,7 +119,8 @@ function addCustom() {
 
 function removeRow(idx) {
 	const next = [...props.rows]
-	next.splice(idx, 1)
+	const [removed] = next.splice(idx, 1)
+	editing.delete(removed)
 	emit('update:rows', next)
 }
 </script>

@@ -9,6 +9,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AppHeader: typeof import('./src/components/AppHeader.vue')['default']
+    FindingPicker: typeof import('./src/components/FindingPicker.vue')['default']
     ImageViewer: typeof import('./src/components/ImageViewer.vue')['default']
     IncidentalFindingsCard: typeof import('./src/components/IncidentalFindingsCard.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
