@@ -70,6 +70,82 @@ class TestReportBuilderSectionFindings(IntegrationTestCase):
 		maxillary = next(s for s in sections if s["name"] == "MAXILLARY ARCH")
 		self.assertIn("Crowding noted", maxillary["lines"])
 
+	def test_edited_text_overrides_rendered_template(self):
+		finding = self._standard_finding("Styloid Process", "Elongated", "Appears elongated on the {side} side")
+		self.report.save_findings(
+			section_findings=[
+				{
+					"section": "Styloid Process",
+					"finding": finding.name,
+					"is_custom": 0,
+					"side": "Left",
+					"edited_text": "Appears markedly elongated on the left side",
+				}
+			],
+			tooth_findings=[],
+		)
+		self.report.reload()
+
+		styloid = next(s for s in build_report_sections(self.report) if s["name"] == "STYLOID PROCESS")
+		self.assertEqual(styloid["lines"], ["Appears markedly elongated on the left side"])
+
+	def test_blank_edited_text_falls_back_to_template(self):
+		finding = self._standard_finding("Styloid Process", "Elongated", "Appears elongated on the {side} side")
+		self.report.save_findings(
+			section_findings=[
+				{"section": "Styloid Process", "finding": finding.name, "is_custom": 0, "side": "Left", "edited_text": "  "}
+			],
+			tooth_findings=[],
+		)
+		self.report.reload()
+
+		styloid = next(s for s in build_report_sections(self.report) if s["name"] == "STYLOID PROCESS")
+		self.assertEqual(styloid["lines"], ["Appears elongated on the left side"])
+
+	def test_impression_label_merges_teeth_across_arches(self):
+		upper = self._standard_finding("Maxillary Arch", "Partial upper", "Missing irt {tooth_number}")
+		upper.db_set("allow_tooth", 1)
+		upper.db_set("impression_label", "PARTIALLY EDENTULOUS")
+		lower = self._standard_finding("Mandibular Arch", "Partial lower", "Missing irt {tooth_number}")
+		lower.db_set("allow_tooth", 1)
+		lower.db_set("impression_label", "PARTIALLY EDENTULOUS")
+		self.report.save_findings(
+			section_findings=[
+				{"section": "Maxillary Arch", "finding": upper.name, "is_custom": 0, "tooth_number": "16, 17"},
+				{"section": "Mandibular Arch", "finding": lower.name, "is_custom": 0, "tooth_number": "36"},
+			],
+			tooth_findings=[],
+		)
+		self.report.reload()
+
+		impression = next(s for s in build_report_sections(self.report) if s["name"] == "RADIOLOGIC IMPRESSION")
+		self.assertIn("PARTIALLY EDENTULOUS irt 16, 17, 36", impression["lines"])
+
+	def test_impression_label_skipped_without_tooth_number(self):
+		finding = self._standard_finding("Maxillary Arch", "Partial upper", "Partial complement noted")
+		finding.db_set("impression_label", "PARTIALLY EDENTULOUS")
+		self.report.save_findings(
+			section_findings=[{"section": "Maxillary Arch", "finding": finding.name, "is_custom": 0, "tooth_number": ""}],
+			tooth_findings=[],
+		)
+		self.report.reload()
+
+		names = [s["name"] for s in build_report_sections(self.report)]
+		self.assertNotIn("RADIOLOGIC IMPRESSION", names)
+
+	def test_multi_line_tooth_description_keeps_line_breaks(self):
+		self.report.save_findings(
+			section_findings=[],
+			tooth_findings=[
+				{"tooth_number": "16", "finding_name": "Caries", "description": "Coronally - a\nRadicularly - b"}
+			],
+		)
+		self.report.reload()
+
+		arch = next(s for s in build_report_sections(self.report) if s["name"] == "MAXILLARY ARCH")
+		self.assertEqual(arch["lines"], ["irt 16 - Coronally - a\nRadicularly - b"])
+
+
 
 class TestReportBuilderToothFindings(IntegrationTestCase):
 	def setUp(self):

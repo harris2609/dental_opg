@@ -19,7 +19,16 @@ def get_reporting_setup_data():
 	standard_findings = frappe.get_all(
 		"OPG Standard Finding",
 		filters={"active": 1},
-		fields=["name", "section_name", "finding_label", "allow_side", "allow_tooth", "allow_level"],
+		fields=[
+			"name",
+			"section_name",
+			"finding_label",
+			"finding_template",
+			"impression_label",
+			"allow_side",
+			"allow_tooth",
+			"allow_level",
+		],
 		order_by="section_name asc, finding_label asc",
 	)
 	findings_by_section = {section: [] for section in SECTION_ORDER}

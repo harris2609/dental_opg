@@ -37,23 +37,28 @@ def _render_template(template, **kwargs):
 	return " ".join(rendered.split())
 
 
-def _section_finding_lines(report):
-	standard_finding_names = {row.finding for row in report.section_findings if row.finding}
-	masters = {}
-	if standard_finding_names:
-		masters = {
-			row.name: row
-			for row in frappe.get_all(
-				"OPG Standard Finding",
-				filters={"name": ["in", list(standard_finding_names)]},
-				fields=["name", "finding_template", "finding_label"],
-			)
-		}
+def _standard_finding_masters(report):
+	names = {row.finding for row in report.section_findings if row.finding}
+	if not names:
+		return {}
+	return {
+		row.name: row
+		for row in frappe.get_all(
+			"OPG Standard Finding",
+			filters={"name": ["in", list(names)]},
+			fields=["name", "finding_template", "finding_label", "impression_label"],
+		)
+	}
 
+
+def _section_finding_lines(report, masters):
 	lines_by_section = {section: [] for section in SECTION_ORDER}
 	for row in report.section_findings:
 		if row.is_custom or not row.finding:
 			text = (row.custom_text or "").strip()
+		elif (row.edited_text or "").strip():
+			# Dentist individualized this finding for this patient only.
+			text = row.edited_text.strip()
 		else:
 			master = masters.get(row.finding)
 			text = _render_template(
@@ -69,6 +74,23 @@ def _section_finding_lines(report):
 		if text and row.section in lines_by_section:
 			lines_by_section[row.section].append(text)
 	return lines_by_section
+
+
+def _impression_label_lines(report, masters):
+	"""One "{impression_label} irt {teeth}" line per distinct label, teeth from
+	every row of that label merged in first-seen order across both arches - so
+	"Partial complement" picked in each arch yields one PARTIALLY EDENTULOUS
+	line. Rows without tooth numbers contribute nothing."""
+	teeth_by_label = {}
+	for row in report.section_findings:
+		master = masters.get(row.finding) if row.finding and not row.is_custom else None
+		label = ((master and master.impression_label) or "").strip()
+		teeth = [t.strip() for t in (row.tooth_number or "").split(",") if t.strip()]
+		if not (label and teeth):
+			continue
+		bucket = teeth_by_label.setdefault(label, [])
+		bucket.extend(t for t in teeth if t not in bucket)
+	return [f"{label} irt {', '.join(teeth)}" for label, teeth in teeth_by_label.items()]
 
 
 def _tooth_finding_lines(report):
@@ -132,11 +154,13 @@ def build_report_sections(report):
 	"""Structured (section name, lines) pairs in fixed order, skipping empty
 	sections. Used by the print format so each section heading can be styled
 	(bold + underline) separately from its plain finding lines."""
-	section_lines = _section_finding_lines(report)
+	masters = _standard_finding_masters(report)
+	section_lines = _section_finding_lines(report, masters)
 	tooth_lines = _tooth_finding_lines(report)
 	for section, extra_lines in tooth_lines.items():
 		section_lines[section].extend(extra_lines)
 
+	section_lines["Radiologic Impression"].extend(_impression_label_lines(report, masters))
 	section_lines["Radiologic Impression"].extend(_impression_finding_lines(report))
 
 	sections = []
