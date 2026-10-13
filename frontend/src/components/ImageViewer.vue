@@ -168,6 +168,7 @@ const tools = [
 	{ value: 'Curve', label: 'Curve' },
 ]
 const PATH_TOOLS = ['Polyline', 'Curve']
+const LABEL_TOOLS = ['Text', 'Landmark']
 const mode = ref('pan')
 
 const viewport = ref(null)
@@ -253,14 +254,14 @@ function onMouseDown(e) {
 		addAnnotation({ annotation_type: 'Point', x: point.x, y: point.y })
 	} else if (mode.value === 'Arrow') {
 		arrowStart.value = point
-	} else if (mode.value === 'Text') {
-		pendingText.value = { annotation_type: 'Text', x: point.x, y: point.y, label_text: '' }
+	} else if (LABEL_TOOLS.includes(mode.value)) {
+		// The viewport is focusable (for Enter/Esc on paths); without this the
+		// mousedown's default focus would steal focus back from the label input.
+		e.preventDefault()
+		pendingText.value = { annotation_type: mode.value, x: point.x, y: point.y, label_text: '' }
 		nextTick(() => textInput.value?.focus())
 	} else if (mode.value === 'Freehand') {
 		drawingPath.value = [point]
-	} else if (mode.value === 'Landmark') {
-		pendingText.value = { annotation_type: 'Landmark', x: point.x, y: point.y, label_text: '' }
-		nextTick(() => textInput.value?.focus())
 	} else if (PATH_TOOLS.includes(mode.value)) {
 		viewport.value.focus()
 		pendingPath.value = [...pendingPath.value, point]
