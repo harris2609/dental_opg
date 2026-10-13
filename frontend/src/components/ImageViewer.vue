@@ -11,17 +11,22 @@
 				:key="t.value"
 				class="toolbtn"
 				:class="mode === t.value ? 'bg-gray-900 text-white' : ''"
-				@click="mode = t.value"
+				@click="selectTool(t.value)"
 			>
 				{{ t.label }}
 			</button>
+			<span v-if="PATH_TOOLS.includes(mode)" class="text-gray-500">Click points, double-click or Enter to finish, Esc to cancel</span>
 			<button class="toolbtn ml-auto text-red-600" @click="clearAnnotations">Clear annotations</button>
 		</div>
 
 		<div
 			ref="viewport"
-			class="relative flex-1 select-none overflow-hidden bg-gray-100"
+			class="relative flex-1 select-none overflow-hidden bg-gray-100 outline-none"
 			:class="mode === 'pan' ? 'cursor-grab' : 'cursor-crosshair'"
+			tabindex="0"
+			@dblclick="finishPath"
+			@keydown.enter.prevent="finishPath"
+			@keydown.esc="cancelPath"
 			@mousedown="onMouseDown"
 			@mousemove="onMouseMove"
 			@mouseup="onMouseUp"
@@ -71,6 +76,25 @@
 							stroke="#ff0000"
 							stroke-width="0.003"
 						/>
+						<polyline
+							v-else-if="a.annotation_type === 'Polyline'"
+							:points="pathPoints(a)"
+							fill="none"
+							stroke="#ff0000"
+							stroke-width="0.003"
+						/>
+						<path
+							v-else-if="a.annotation_type === 'Curve'"
+							:d="curvePath(parsePath(a))"
+							fill="none"
+							stroke="#ff0000"
+							stroke-width="0.003"
+						/>
+						<g v-else-if="a.annotation_type === 'Landmark'">
+							<line :x1="a.x - 0.012" :y1="a.y" :x2="a.x + 0.012" :y2="a.y" stroke="#ff0000" stroke-width="0.003" />
+							<line :x1="a.x" :y1="a.y - 0.012" :x2="a.x" :y2="a.y + 0.012" stroke="#ff0000" stroke-width="0.003" />
+							<text :x="a.x + 0.015" :y="a.y - 0.008" font-size="0.024" fill="#ff0000">{{ a.label_text }}</text>
+						</g>
 						<text v-else-if="a.annotation_type === 'Text'" :x="a.x" :y="a.y" font-size="0.028" fill="#ff0000">
 							{{ a.label_text }}
 						</text>
@@ -82,6 +106,23 @@
 						stroke="#ff0000"
 						stroke-width="0.003"
 					/>
+					<polyline
+						v-if="pendingPath.length && mode === 'Polyline'"
+						:points="pendingPath.map((p) => `${p.x},${p.y}`).join(' ')"
+						fill="none"
+						stroke="#ff0000"
+						stroke-width="0.003"
+						stroke-dasharray="0.01 0.006"
+					/>
+					<path
+						v-if="pendingPath.length && mode === 'Curve'"
+						:d="curvePath(pendingPath)"
+						fill="none"
+						stroke="#ff0000"
+						stroke-width="0.003"
+						stroke-dasharray="0.01 0.006"
+					/>
+					<circle v-for="(p, k) in pendingPath" :key="`v${k}`" :cx="p.x" :cy="p.y" r="0.004" fill="#ff0000" />
 				</svg>
 			</div>
 		</div>
@@ -90,7 +131,7 @@
 			<input
 				ref="textInput"
 				v-model="pendingText.label_text"
-				placeholder="Annotation label, press Enter to place"
+				:placeholder="pendingText.annotation_type === 'Landmark' ? 'Landmark name, press Enter to place' : 'Annotation label, press Enter to place'"
 				class="flex-1 rounded border px-2 py-1 text-sm"
 				@keyup.enter="commitText"
 				@keyup.esc="pendingText = null"
@@ -119,10 +160,14 @@ const emit = defineEmits(['update:annotations', 'upload'])
 const tools = [
 	{ value: 'pan', label: 'Pan' },
 	{ value: 'Point', label: 'Point' },
+	{ value: 'Landmark', label: 'Landmark' },
 	{ value: 'Arrow', label: 'Arrow' },
 	{ value: 'Text', label: 'Text' },
 	{ value: 'Freehand', label: 'Freehand' },
+	{ value: 'Polyline', label: 'Polyline' },
+	{ value: 'Curve', label: 'Curve' },
 ]
+const PATH_TOOLS = ['Polyline', 'Curve']
 const mode = ref('pan')
 
 const viewport = ref(null)
@@ -189,6 +234,12 @@ const panStart = ref({ x: 0, y: 0, panX: 0, panY: 0 })
 const arrowStart = ref(null)
 const drawingPath = ref([])
 const pendingText = ref(null)
+const pendingPath = ref([])
+
+function selectTool(value) {
+	mode.value = value
+	pendingPath.value = []
+}
 
 function onMouseDown(e) {
 	if (!imgSize.w) return
@@ -207,6 +258,12 @@ function onMouseDown(e) {
 		nextTick(() => textInput.value?.focus())
 	} else if (mode.value === 'Freehand') {
 		drawingPath.value = [point]
+	} else if (mode.value === 'Landmark') {
+		pendingText.value = { annotation_type: 'Landmark', x: point.x, y: point.y, label_text: '' }
+		nextTick(() => textInput.value?.focus())
+	} else if (PATH_TOOLS.includes(mode.value)) {
+		viewport.value.focus()
+		pendingPath.value = [...pendingPath.value, point]
 	}
 }
 
@@ -241,14 +298,57 @@ function commitText() {
 	pendingText.value = null
 }
 
-function pathPoints(a) {
+const SAME_POINT = 0.002
+
+function distinctPoints(points) {
+	// dblclick is preceded by two mousedowns on the same spot - collapse them.
+	return points.filter((p, i) => {
+		const prev = points[i - 1]
+		return !prev || Math.hypot(p.x - prev.x, p.y - prev.y) > SAME_POINT
+	})
+}
+
+function finishPath() {
+	if (!PATH_TOOLS.includes(mode.value)) return
+	const points = distinctPoints(pendingPath.value)
+	if (points.length > 1) addAnnotation({ annotation_type: mode.value, path_data: JSON.stringify(points) })
+	pendingPath.value = []
+}
+
+function cancelPath() {
+	pendingPath.value = []
+}
+
+function parsePath(a) {
 	try {
 		return JSON.parse(a.path_data)
-			.map((p) => `${p.x},${p.y}`)
-			.join(' ')
 	} catch {
-		return ''
+		return []
 	}
+}
+
+function pathPoints(a) {
+	return parsePath(a)
+		.map((p) => `${p.x},${p.y}`)
+		.join(' ')
+}
+
+// Same control-point math as image_utils.catmull_rom_points.
+function curvePath(points) {
+	if (points.length < 2) return ''
+	let d = `M${points[0].x},${points[0].y}`
+	for (let i = 0; i < points.length - 1; i++) {
+		const p0 = points[i - 1] || points[i]
+		const p1 = points[i]
+		const p2 = points[i + 1]
+		const p3 = points[i + 2] || p2
+		const c1x = p1.x + (p2.x - p0.x) / 6
+		const c1y = p1.y + (p2.y - p0.y) / 6
+		const c2x = p2.x - (p3.x - p1.x) / 6
+		const c2y = p2.y - (p3.y - p1.y) / 6
+		d += ` C${c1x},${c1y} ${c2x},${c2y} ${p2.x},${p2.y}`
+	}
+	return d
 }
 
 function onFileChange(e) {
