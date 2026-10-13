@@ -49,6 +49,32 @@ def get_reporting_setup_data():
 	}
 
 
+SIGNATORY_FIELDS = ("reported_by", "verified_by")
+MAX_SIGNATORY_SUGGESTIONS = 50
+
+
+@frappe.whitelist(methods=["GET"])
+def get_signatory_suggestions():
+	"""Names previously typed into Reported by / Verified by, most recent first,
+	so the editor can offer them instead of making the dentist retype them."""
+	suggestions = {}
+	for field in SIGNATORY_FIELDS:
+		values = frappe.get_all(
+			"OPG Report",
+			filters={field: ["is", "set"]},
+			pluck=field,
+			order_by="modified desc",
+			limit_page_length=500,
+		)
+		unique = []
+		for value in values:
+			name = (value or "").strip()
+			if name and name not in unique:
+				unique.append(name)
+		suggestions[field] = unique[:MAX_SIGNATORY_SUGGESTIONS]
+	return suggestions
+
+
 @frappe.whitelist(methods=["POST"])
 def create_report(
 	patient_name: str,
