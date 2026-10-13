@@ -32,9 +32,14 @@ SIDE_PHRASES = {
 _PLACEHOLDER = re.compile(r"\{(side|tooth_number|level)\}")
 
 
+# "... missing irt {tooth_number}" with no tooth number entered would print a
+# dangling "irt" in a signed report - drop it.
+_DANGLING_TOOTH_REF = re.compile(r"\s+(irt|wrt)\s*$", re.IGNORECASE)
+
+
 def _render_template(template, **kwargs):
 	rendered = _PLACEHOLDER.sub(lambda m: str(kwargs.get(m.group(1), "")), template or "")
-	return " ".join(rendered.split())
+	return _DANGLING_TOOTH_REF.sub("", " ".join(rendered.split()))
 
 
 def _standard_finding_masters(report):

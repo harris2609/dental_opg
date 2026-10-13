@@ -238,8 +238,8 @@ const pendingText = ref(null)
 const pendingPath = ref([])
 
 function selectTool(value) {
+	finishPath()
 	mode.value = value
-	pendingPath.value = []
 }
 
 function onMouseDown(e) {
@@ -358,7 +358,9 @@ function onFileChange(e) {
 	e.target.value = ''
 }
 
-defineExpose({ fitToScreen })
+// finishPath is exposed so Save/Generate keep a path the dentist has not
+// double-clicked to finish yet.
+defineExpose({ fitToScreen, finishPath })
 </script>
 
 <style scoped>

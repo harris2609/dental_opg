@@ -21,7 +21,7 @@
 
 		<div class="grid flex-1 gap-4 overflow-hidden p-4 md:grid-cols-2">
 			<div class="sticky top-0 h-[45vh] overflow-hidden rounded border md:h-full">
-				<ImageViewer :image-url="imageSrc" v-model:annotations="annotations" @upload="onUpload" />
+				<ImageViewer ref="viewer" :image-url="imageSrc" v-model:annotations="annotations" @upload="onUpload" />
 			</div>
 
 			<div class="space-y-4 overflow-y-auto pb-8 md:h-full">
@@ -140,6 +140,7 @@ const setup = reactive({ section_order: [], standard_findings_by_section: {}, to
 const sectionFindings = ref([])
 const toothFindings = ref([])
 const annotations = ref([])
+const viewer = ref(null)
 const patient = reactive({})
 const signatories = reactive({ reported_by: [], verified_by: [] })
 
@@ -184,6 +185,7 @@ function errorText(e) {
 }
 
 async function save() {
+	viewer.value?.finishPath()
 	saving.value = true
 	try {
 		await saveReportDetails(report.name, {

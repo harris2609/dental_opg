@@ -10,7 +10,7 @@
 					<span class="min-w-[10rem] flex-1">
 						{{ row.is_custom ? row.custom_text : labelFor(row.finding) }}
 					</span>
-					<select v-if="!row.is_custom && master(row)?.allow_side" v-model="row.side" class="rounded border px-1 py-0.5" @change="emitUpdate">
+					<select v-if="!row.is_custom && master(row)?.allow_side" v-model="row.side" :disabled="!!row.edited_text" :title="lockedTitle(row)" class="rounded border px-1 py-0.5 disabled:bg-gray-100" @change="emitUpdate">
 						<option value="">side...</option>
 						<option>Left</option>
 						<option>Right</option>
@@ -20,10 +20,12 @@
 						v-if="!row.is_custom && master(row)?.allow_tooth"
 						v-model="row.tooth_number"
 						placeholder="tooth #"
-						class="w-24 rounded border px-1 py-0.5"
+						:disabled="!!row.edited_text"
+						:title="lockedTitle(row)"
+						class="w-24 rounded border px-1 py-0.5 disabled:bg-gray-100"
 						@input="emitUpdate"
 					/>
-					<select v-if="!row.is_custom && master(row)?.allow_level" v-model="row.level" class="rounded border px-1 py-0.5" @change="emitUpdate">
+					<select v-if="!row.is_custom && master(row)?.allow_level" v-model="row.level" :disabled="!!row.edited_text" :title="lockedTitle(row)" class="rounded border px-1 py-0.5 disabled:bg-gray-100" @change="emitUpdate">
 						<option value="">level...</option>
 						<option>Cervical Third</option>
 						<option>Middle Third</option>
@@ -88,12 +90,26 @@ function emitUpdate() {
 	emit('update:rows', [...props.rows])
 }
 
+function standardText(row) {
+	return renderTemplate(master(row)?.finding_template, row) || labelFor(row.finding)
+}
+
+// Side / tooth / level are baked into edited text, so they are locked while it
+// exists - otherwise the arch line and the Radiologic Impression line (which
+// still reads tooth_number) could silently disagree.
+function lockedTitle(row) {
+	return row.edited_text ? 'Text was edited - use "reset to standard text" to change this' : ''
+}
+
 function toggleEdit(row) {
 	if (editing.has(row)) {
 		editing.delete(row)
+		// Opened but not actually changed: stay on the standard text.
+		if ((row.edited_text || '').trim() === standardText(row)) row.edited_text = ''
+		emitUpdate()
 		return
 	}
-	if (!row.edited_text) row.edited_text = renderTemplate(master(row)?.finding_template, row) || labelFor(row.finding)
+	if (!row.edited_text) row.edited_text = standardText(row)
 	editing.add(row)
 	emitUpdate()
 }

@@ -245,3 +245,13 @@ class TestOPGReport(IntegrationTestCase):
 		)
 		self.report.reload()
 		self.assertEqual(self.report.section_findings[0].edited_text, "Edited for patient")
+
+	def test_section_custom_finding_longer_than_140_characters_saves(self):
+		long_text = "Custom section note " + "y" * 300
+		self.report.save_findings(
+			section_findings=[{"section": "Maxillary Sinus", "is_custom": 1, "custom_text": long_text}],
+			tooth_findings=[],
+		)
+		self.report.reload()
+		self.assertEqual(self.report.section_findings[0].custom_text, long_text)
+		self.assertTrue(frappe.db.exists("OPG Standard Finding", {"finding_template": long_text}))

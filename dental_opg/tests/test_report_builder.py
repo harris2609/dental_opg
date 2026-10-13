@@ -145,6 +145,16 @@ class TestReportBuilderSectionFindings(IntegrationTestCase):
 		arch = next(s for s in build_report_sections(self.report) if s["name"] == "MAXILLARY ARCH")
 		self.assertEqual(arch["lines"], ["irt 16 - Coronally - a\nRadicularly - b"])
 
+	def test_empty_tooth_number_leaves_no_dangling_irt(self):
+		finding = self._standard_finding("Maxillary Arch", "Partial", "Partial complement noted with missing irt {tooth_number}")
+		self.report.save_findings(
+			section_findings=[{"section": "Maxillary Arch", "finding": finding.name, "is_custom": 0, "tooth_number": ""}],
+			tooth_findings=[],
+		)
+		self.report.reload()
+
+		arch = next(s for s in build_report_sections(self.report) if s["name"] == "MAXILLARY ARCH")
+		self.assertEqual(arch["lines"], ["Partial complement noted with missing"])
 
 
 class TestReportBuilderToothFindings(IntegrationTestCase):
