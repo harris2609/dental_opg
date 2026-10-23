@@ -54,6 +54,21 @@ export function getReport(name) {
 	})
 }
 
+export function getPatient(name) {
+	return frappeRequest({
+		url: '/api/method/frappe.client.get',
+		method: 'GET',
+		params: { doctype: 'OPG Patient', name },
+	})
+}
+
+export function getSignatorySuggestions() {
+	return frappeRequest({
+		url: '/api/method/dental_opg.api.get_signatory_suggestions',
+		method: 'GET',
+	})
+}
+
 export function listReports() {
 	return frappeRequest({
 		url: '/api/method/frappe.client.get_list',

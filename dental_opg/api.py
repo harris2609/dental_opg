@@ -1,4 +1,7 @@
 import frappe
+from frappe.query_builder import Order
+from frappe.query_builder.functions import Max
+from pypika.functions import Trim
 
 SECTION_ORDER = [
 	"Condylar Morphology",
@@ -19,7 +22,16 @@ def get_reporting_setup_data():
 	standard_findings = frappe.get_all(
 		"OPG Standard Finding",
 		filters={"active": 1},
-		fields=["name", "section_name", "finding_label", "allow_side", "allow_tooth", "allow_level"],
+		fields=[
+			"name",
+			"section_name",
+			"finding_label",
+			"finding_template",
+			"impression_label",
+			"allow_side",
+			"allow_tooth",
+			"allow_level",
+		],
 		order_by="section_name asc, finding_label asc",
 	)
 	findings_by_section = {section: [] for section in SECTION_ORDER}
@@ -38,6 +50,32 @@ def get_reporting_setup_data():
 		"standard_findings_by_section": findings_by_section,
 		"tooth_findings": tooth_findings,
 	}
+
+
+SIGNATORY_FIELDS = ("reported_by", "verified_by")
+MAX_SIGNATORY_SUGGESTIONS = 50
+
+
+@frappe.whitelist(methods=["GET"])
+def get_signatory_suggestions():
+	"""Names previously typed into Reported by / Verified by, most recent first,
+	so the editor can offer them instead of making the dentist retype them."""
+	frappe.has_permission("OPG Report", "read", throw=True)
+
+	report = frappe.qb.DocType("OPG Report")
+	suggestions = {}
+	for field in SIGNATORY_FIELDS:
+		name = Trim(report[field])
+		suggestions[field] = (
+			frappe.qb.from_(report)
+			.select(name)
+			.where(name != "")
+			.groupby(name)
+			.orderby(Max(report.modified), order=Order.desc)
+			.limit(MAX_SIGNATORY_SUGGESTIONS)
+			.run(pluck=True)
+		)
+	return suggestions
 
 
 @frappe.whitelist(methods=["POST"])

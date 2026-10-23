@@ -11,7 +11,7 @@
             "fieldname": "annotation_type",
             "fieldtype": "Select",
             "label": "Type",
-            "options": "Point\nArrow\nText\nFreehand",
+            "options": "Point\nArrow\nText\nFreehand\nPolyline\nLandmark\nCurve",
             "reqd": 1,
             "in_list_view": 1
         },
@@ -52,5 +52,6 @@
             "label": "Color",
             "default": "#ff0000"
         }
-    ]
+    ],
+    "modified": "2026-10-13 12:00:00.000000"
 }

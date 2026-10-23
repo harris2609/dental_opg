@@ -30,7 +30,7 @@
         },
         {
             "fieldname": "finding_name",
-            "fieldtype": "Data",
+            "fieldtype": "Small Text",
             "label": "Finding Name",
             "reqd": 1,
             "in_list_view": 1
@@ -41,5 +41,6 @@
             "label": "Description",
             "reqd": 1
         }
-    ]
+    ],
+    "modified": "2026-10-13 12:00:00.000000"
 }

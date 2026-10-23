@@ -4,7 +4,7 @@ import frappe
 from frappe.tests import IntegrationTestCase
 from PIL import Image
 
-from dental_opg.dental_opg_reporting.image_utils import get_annotated_image_bytes
+from dental_opg.dental_opg_reporting.image_utils import catmull_rom_points, get_annotated_image_bytes
 
 
 def _make_test_jpeg_bytes():
@@ -82,6 +82,39 @@ class TestImageUtils(IntegrationTestCase):
 		self.assertGreater(corner_pixel[0], 150)
 		self.assertGreater(corner_pixel[1], 150)
 		self.assertGreater(corner_pixel[2], 150)
+
+	def _red_at(self, annotations, xy):
+		self._attach_image(_make_test_jpeg_bytes())
+		self.report.save_annotations(annotations=annotations)
+		self.report.reload()
+		pixel = Image.open(io.BytesIO(get_annotated_image_bytes(self.report))).convert("RGB").getpixel(xy)
+		return pixel[0] > 150 and pixel[1] < 100 and pixel[2] < 100
+
+	def test_polyline_draws_through_vertices(self):
+		path = '[{"x": 0.1, "y": 0.5}, {"x": 0.5, "y": 0.5}, {"x": 0.5, "y": 0.9}]'
+		self.assertTrue(self._red_at([{"annotation_type": "Polyline", "path_data": path, "color": "#ff0000"}], (30, 30)))
+
+	def test_curve_draws_through_control_points(self):
+		path = '[{"x": 0.1, "y": 0.2}, {"x": 0.5, "y": 0.5}, {"x": 0.9, "y": 0.2}]'
+		self.assertTrue(self._red_at([{"annotation_type": "Curve", "path_data": path, "color": "#ff0000"}], (50, 30)))
+
+	def test_landmark_draws_marker_at_point(self):
+		self.assertTrue(
+			self._red_at(
+				[{"annotation_type": "Landmark", "x": 0.5, "y": 0.5, "label_text": "Go", "color": "#ff0000"}], (50, 30)
+			)
+		)
+
+	def test_catmull_rom_passes_through_every_control_point(self):
+		points = [(0.0, 0.0), (10.0, 5.0), (20.0, 0.0), (30.0, 8.0)]
+		sampled = catmull_rom_points(points)
+		for p in points:
+			self.assertTrue(any(abs(s[0] - p[0]) < 1e-9 and abs(s[1] - p[1]) < 1e-9 for s in sampled), p)
+
+	def test_curve_with_single_point_is_skipped(self):
+		self.assertFalse(
+			self._red_at([{"annotation_type": "Curve", "path_data": '[{"x": 0.5, "y": 0.5}]', "color": "#ff0000"}], (50, 30))
+		)
 
 	def _attach_image(self, content, file_name="test_opg.jpg"):
 		file_doc = frappe.get_doc(

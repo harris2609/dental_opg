@@ -5,3 +5,5 @@
 [post_model_sync]
 # Patches added in this section will be executed after doctypes are migrated
 dental_opg.patches.clear_dangling_finding_links
+dental_opg.patches.fix_irt_tooth_number_templates
+dental_opg.patches.fix_tooth_finding_arch

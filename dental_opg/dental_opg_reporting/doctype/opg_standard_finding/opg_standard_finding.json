@@ -20,7 +20,7 @@
         },
         {
             "fieldname": "finding_label",
-            "fieldtype": "Data",
+            "fieldtype": "Small Text",
             "label": "Finding Label",
             "reqd": 1,
             "in_list_view": 1
@@ -52,6 +52,12 @@
             "label": "Allow Level (Cervical/Middle/Apical Third)"
         },
         {
+            "fieldname": "impression_label",
+            "fieldtype": "Data",
+            "label": "Impression Label",
+            "description": "When set and the row has tooth numbers, adds '<label> irt <teeth>' to Radiologic Impression"
+        },
+        {
             "fieldname": "active",
             "fieldtype": "Check",
             "label": "Active",
@@ -67,5 +73,6 @@
             "create": 1,
             "delete": 1
         }
-    ]
+    ],
+    "modified": "2026-10-13 18:00:00.000000"
 }

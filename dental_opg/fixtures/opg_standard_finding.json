@@ -122,9 +122,10 @@
         "name": "ma-partial",
         "section_name": "Maxillary Arch",
         "finding_label": "Partial complement set, missing tooth",
-        "finding_template": "Partial complement set of permanent dentition noted with missing irt tooth number {tooth_number}",
+        "finding_template": "Partial complement set of permanent dentition noted with missing irt {tooth_number}",
         "allow_tooth": 1,
-        "active": 1
+        "active": 1,
+        "impression_label": "PARTIALLY EDENTULOUS"
     },
     {
         "doctype": "OPG Standard Finding",
@@ -139,7 +140,7 @@
         "name": "ma-crest-alveolar",
         "section_name": "Maxillary Arch",
         "finding_label": "Crest of alveolar bone level irt tooth",
-        "finding_template": "Crest of alveolar bone is at the {level} of the root irt tooth number {tooth_number}",
+        "finding_template": "Crest of alveolar bone is at the {level} of the root irt {tooth_number}",
         "allow_tooth": 1,
         "allow_level": 1,
         "active": 1
@@ -157,9 +158,10 @@
         "name": "mda-partial",
         "section_name": "Mandibular Arch",
         "finding_label": "Partial complement set, missing tooth",
-        "finding_template": "Partial complement set of permanent dentition noted with missing irt tooth number {tooth_number}",
+        "finding_template": "Partial complement set of permanent dentition noted with missing irt {tooth_number}",
         "allow_tooth": 1,
-        "active": 1
+        "active": 1,
+        "impression_label": "PARTIALLY EDENTULOUS"
     },
     {
         "doctype": "OPG Standard Finding",
@@ -174,7 +176,7 @@
         "name": "mda-crest-alveolar",
         "section_name": "Mandibular Arch",
         "finding_label": "Crest of alveolar bone level irt tooth",
-        "finding_template": "Crest of alveolar bone is at the {level} of the root irt tooth number {tooth_number}",
+        "finding_template": "Crest of alveolar bone is at the {level} of the root irt {tooth_number}",
         "allow_tooth": 1,
         "allow_level": 1,
         "active": 1
@@ -193,6 +195,28 @@
         "section_name": "Radiologic Impression",
         "finding_label": "Clinical correlation advised",
         "finding_template": "Clinical correlation advised",
+        "active": 1
+    },
+    {
+        "doctype": "OPG Standard Finding",
+        "name": "ri-chronic-generalized-periodontitis",
+        "section_name": "Radiologic Impression",
+        "finding_label": "Chronic generalized periodontitis",
+        "finding_template": "Chronic generalized periodontitis",
+        "allow_side": 0,
+        "allow_tooth": 0,
+        "allow_level": 0,
+        "active": 1
+    },
+    {
+        "doctype": "OPG Standard Finding",
+        "name": "ri-localized-periodontitis",
+        "section_name": "Radiologic Impression",
+        "finding_label": "Localized periodontitis",
+        "finding_template": "Localized periodontitis irt {tooth_number}",
+        "allow_side": 0,
+        "allow_tooth": 1,
+        "allow_level": 0,
         "active": 1
     }
 ]
