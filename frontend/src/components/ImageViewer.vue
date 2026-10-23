@@ -131,7 +131,7 @@
 			<input
 				ref="textInput"
 				v-model="pendingText.label_text"
-				:placeholder="pendingText.annotation_type === 'Landmark' ? 'Landmark name, press Enter to place' : 'Annotation label, press Enter to place'"
+				:placeholder="pendingText.annotation_type === 'Landmark' ? 'Landmark name (optional), press Enter to place' : 'Annotation label, press Enter to place'"
 				class="flex-1 rounded border px-2 py-1 text-sm"
 				@keyup.enter="commitText"
 				@keyup.esc="pendingText = null"
@@ -293,19 +293,28 @@ function onMouseUp(e) {
 }
 
 function commitText() {
-	if (pendingText.value && pendingText.value.label_text.trim()) {
-		addAnnotation({ ...pendingText.value })
+	const pending = pendingText.value
+	// A Landmark's crosshair marks the spot on its own; Text is nothing without a label.
+	if (pending && (pending.label_text.trim() || pending.annotation_type === 'Landmark')) {
+		addAnnotation({ ...pending, label_text: pending.label_text.trim() })
 	}
 	pendingText.value = null
 }
 
-const SAME_POINT = 0.002
+// In screen pixels, so it means the same thing at every zoom level and
+// image size - an image-relative threshold could be under 2px on screen
+// and let the hand jitter between the two clicks through as a kink.
+const SAME_POINT_PX = 5
+
+function screenDistance(a, b) {
+	return Math.hypot((a.x - b.x) * imgSize.w * zoom.value, (a.y - b.y) * imgSize.h * zoom.value)
+}
 
 function distinctPoints(points) {
 	// dblclick is preceded by two mousedowns on the same spot - collapse them.
 	return points.filter((p, i) => {
 		const prev = points[i - 1]
-		return !prev || Math.hypot(p.x - prev.x, p.y - prev.y) > SAME_POINT
+		return !prev || screenDistance(p, prev) > SAME_POINT_PX
 	})
 }
 

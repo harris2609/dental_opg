@@ -20,15 +20,22 @@ def _clear_missing_links(rows, master_doctype):
 MAXILLARY_QUADRANTS = ("1", "2", "5", "6")
 
 
+def arch_for_tooth(tooth_number):
+	"""The arch an FDI tooth number belongs to, or None if it has no number.
+	Shared by the save path and the backfill patch."""
+	quadrant = (tooth_number or "").strip()[:1]
+	if not quadrant:
+		return None
+	return "Maxillary" if quadrant in MAXILLARY_QUADRANTS else "Mandibular"
+
+
 class OPGReport(Document):
 	def validate(self):
 		# The tooth number is the source of truth for the arch. `arch` is a
 		# Select with no blank option, so it always arrives pre-filled with
 		# "Maxillary" - an "only if empty" check would never fire.
 		for row in self.tooth_findings:
-			quadrant = (row.tooth_number or "").strip()[:1]
-			if quadrant:
-				row.arch = "Maxillary" if quadrant in MAXILLARY_QUADRANTS else "Mandibular"
+			row.arch = arch_for_tooth(row.tooth_number) or row.arch
 
 	@frappe.whitelist(methods=["POST"])
 	def save_findings(self, section_findings: list | None = None, tooth_findings: list | None = None):

@@ -91,7 +91,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import FindingPicker from './FindingPicker.vue'
-import { fillToothNumber } from '../findingText'
+import { fillToothNumber, dropToothNumber } from '../findingText'
 
 const props = defineProps({
 	arch: { type: String, required: true }, // 'Maxillary' | 'Mandibular'
@@ -186,9 +186,17 @@ function addCustom() {
 }
 
 function removeRow(row) {
-	emit(
-		'update:toothFindings',
-		props.toothFindings.filter((r) => r !== row),
-	)
+	// The same finding added to several teeth at once lists all of them in
+	// each tooth's text - take the removed tooth out of the others' lists.
+	const template = row.finding
+		? props.toothFindingsMaster.find((f) => f.name === row.finding)?.description_template
+		: null
+	const remaining = props.toothFindings.filter((r) => r !== row)
+	if (template) {
+		for (const r of remaining) {
+			if (r.finding === row.finding) r.description = dropToothNumber(r.description, template, row.tooth_number)
+		}
+	}
+	emit('update:toothFindings', remaining)
 }
 </script>

@@ -1,4 +1,7 @@
 import frappe
+from frappe.query_builder import Order
+from frappe.query_builder.functions import Max
+from pypika.functions import Trim
 
 SECTION_ORDER = [
 	"Condylar Morphology",
@@ -57,21 +60,21 @@ MAX_SIGNATORY_SUGGESTIONS = 50
 def get_signatory_suggestions():
 	"""Names previously typed into Reported by / Verified by, most recent first,
 	so the editor can offer them instead of making the dentist retype them."""
+	frappe.has_permission("OPG Report", "read", throw=True)
+
+	report = frappe.qb.DocType("OPG Report")
 	suggestions = {}
 	for field in SIGNATORY_FIELDS:
-		values = frappe.get_all(
-			"OPG Report",
-			filters={field: ["is", "set"]},
-			pluck=field,
-			order_by="modified desc",
-			limit_page_length=500,
+		name = Trim(report[field])
+		suggestions[field] = (
+			frappe.qb.from_(report)
+			.select(name)
+			.where(name != "")
+			.groupby(name)
+			.orderby(Max(report.modified), order=Order.desc)
+			.limit(MAX_SIGNATORY_SUGGESTIONS)
+			.run(pluck=True)
 		)
-		unique = []
-		for value in values:
-			name = (value or "").strip()
-			if name and name not in unique:
-				unique.append(name)
-		suggestions[field] = unique[:MAX_SIGNATORY_SUGGESTIONS]
 	return suggestions
 
 

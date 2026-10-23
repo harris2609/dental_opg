@@ -1,6 +1,6 @@
 # Rado-2 Feedback Round — Handoff (2026-10-13)
 
-Status: **implementation complete, reviewed, fixes applied. Branch NOT merged.**
+Status: **implementation complete, reviewed, fixes applied, deferred minors fixed (2026-10-23). Branch NOT merged.**
 Next step: decide what to do with the branch (merge to `main` / push + PR / keep).
 
 ## Where things are
@@ -46,13 +46,19 @@ Next step: decide what to do with the branch (merge to `main` / push + PR / keep
 - The jaw is always derived from the tooth number (the old "only if empty" check never fired because the Select field pre-fills "Maxillary").
 - The `bench serve` dev server returned "page not found" for `/dental_opg` on every site, though the app works when run in-process. The browser check used `frappe.app.application` run via werkzeug `run_simple` on :8000 instead. Not investigated further.
 
-## Deferred minor issues (from the final review — not fixed)
-1. Double-click to finish a Curve can occasionally leave a tiny kink at the end (duplicate-point threshold is image-relative, ~1.8 screen px).
-2. A Landmark can't be placed without a label.
-3. Multi-select `(tooth number)` fill: if one tooth's finding is removed later, the other teeth's text still lists it.
-4. The print format doesn't HTML-escape finding text (pre-existing). Safer: `{{ (line | e).replace("\n", "<br>") }}`.
-5. Old API-created rows with a wrong stored jaw only correct on the next save (no backfill patch).
-6. `get_signatory_suggestions` scans up to 500 rows per field instead of using DISTINCT (performance only).
+## Deferred minor issues — resolved (2026-10-23)
+1. **Curve end kink** — the duplicate-point threshold is now 5 *screen* pixels (zoom- and image-size-aware) instead of an image-relative 0.002.
+2. **Landmark without a label** — allowed; the crosshair is drawn alone. Text annotations still need a label.
+3. **Multi-select `(tooth number)` fill** — removing one tooth's finding takes that tooth out of the sibling rows' text, as long as their text is still the untouched template fill (`dropToothNumber` in `findingText.js`). Hand-edited text is left alone.
+4. **Print format escaping** — finding lines are rendered `{{ line | e | replace("\n", "<br>") }}`. (The originally suggested `(line | e).replace(...)` would escape the `<br>` too, since `Markup.replace` escapes its arguments.) Header/footer Data fields were left as-is: Frappe already sanitises them on save, so escaping again double-encodes `&`.
+5. **Wrong stored jaw on old rows** — `patches/fix_tooth_finding_arch.py` backfills `arch` from the tooth number; `arch_for_tooth()` is shared with `OPGReport.validate`.
+6. **`get_signatory_suggestions`** — one `GROUP BY TRIM(field)` query per field ordered by latest use, limited to 50; it now also checks read permission on OPG Report.
+
+Tests: 57, OK (new: print-format escaping, arch backfill, whitespace-only signatory duplicates).
+
+Still open: the footer layout — waiting on the clinic's model report.
+
+Note: `bench serve` serves `/dental_opg` fine on a fresh v16 bench (redirects to `/dental_opg/login` when logged out), so the earlier "page not found" looks environment-specific.
 
 ## To resume
 1. `git checkout rado-2-feedback`, then run the tests (command above).

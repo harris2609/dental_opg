@@ -28,3 +28,13 @@ class TestSignatorySuggestions(IntegrationTestCase):
 		self.assertIn(f"Dr V{older}", result["verified_by"])
 		self.assertNotIn("", result["verified_by"])
 		self.assertLessEqual(len(reported), 50)
+
+	def test_names_differing_only_in_surrounding_spaces_are_one_suggestion(self):
+		name = f"Dr {frappe.generate_hash(length=6)}"
+		self._report(f"  {name} ", "")
+		self._report(name, "")
+
+		reported = get_signatory_suggestions()["reported_by"]
+
+		self.assertEqual(reported.count(name), 1)
+		self.assertNotIn(f"  {name} ", reported)
